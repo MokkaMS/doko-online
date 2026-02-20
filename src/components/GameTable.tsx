@@ -69,7 +69,10 @@ export const GameTable: React.FC = () => {
                 </span>
                 {state.currentPlayerIndex === idx && <span className="current-turn-indicator">★</span>}
               </div>
-              <span className="player-points">{p.tournamentPoints} Pkt ({p.points} A)</span>
+              <span className="player-points">
+                {p.tournamentPoints} Pkt
+                {state.phase === 'Scoring' && ` (${p.points} A)`}
+              </span>
               <div className="badges-row">
                 {(p.id === humanPlayer.id || p.isRevealed || state.phase === 'Scoring') && (
                     <div className="team-badge">{p.team}</div>

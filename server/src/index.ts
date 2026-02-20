@@ -9,7 +9,16 @@ import { Bot } from './logic/Bot';
 import { validatePlayerName } from './utils/validation';
 
 const app = express();
-app.use(cors());
+
+const allowedOrigins = process.env.CORS_ALLOWED_ORIGINS
+  ? process.env.CORS_ALLOWED_ORIGINS.split(',').map(o => o.trim())
+  : ["http://localhost:5173", "http://127.0.0.1:5173"];
+
+app.use(cors({
+  origin: allowedOrigins,
+  methods: ["GET", "POST"],
+  credentials: true
+}));
 
 // Serve static files from the frontend build directory
 app.use(express.static(path.join(__dirname, '../../dist')));
@@ -17,8 +26,9 @@ app.use(express.static(path.join(__dirname, '../../dist')));
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "*",
-    methods: ["GET", "POST"]
+    origin: allowedOrigins,
+    methods: ["GET", "POST"],
+    credentials: true
   }
 });
 

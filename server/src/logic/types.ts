@@ -40,7 +40,8 @@ export interface Player {
   hand: Card[];
   team: Team;
   isRevealed?: boolean;
-  points: number;
+  points: number; // Current game points (Augen)
+  tournamentPoints: number; // Long-term score
   tricks: Card[][];
   connected?: boolean;
   disconnectTime?: number;
@@ -58,6 +59,20 @@ export interface GameSettings {
 
 export type Bid = 'Gesund' | 'Hochzeit' | 'DamenSolo' | 'BubenSolo' | 'FarbenSolo' | 'Fleischlos';
 
+export interface ScoringResult {
+  winner: 'Re' | 'Kontra' | null;
+  winningPoints: number; // The net points awarded to the winner (and subtracted from loser)
+  winnerTeam: string[]; // Player IDs
+  reAugen: number;
+  kontraAugen: number;
+  reSpecialPoints: string[];
+  kontraSpecialPoints: string[];
+  details: {
+      re: string[]; // List of points descriptions, e.g., ["Gewonnen: 1", "Fuchs: 1"]
+      kontra: string[];
+  }
+}
+
 export interface GameState {
   players: Player[];
   currentPlayerIndex: number;
@@ -71,7 +86,8 @@ export interface GameState {
   kontraPlayerIds: string[];
   announcements: { [playerId: string]: string[] };
   reKontraAnnouncements: { [playerId: string]: 'Re' | 'Kontra' | null };
-  specialPoints: { re: string[], kontra: string[] };
+  specialPoints: { re: string[], kontra: string[] }; // Tracks events during game
+  lastGameResult?: ScoringResult; // Stores the result of the last game
   notifications: { id: number, text: string }[];
   phase: 'MainMenu' | 'Lobby' | 'Settings' | 'Dealing' | 'Bidding' | 'Playing' | 'Scoring';
   lastActivePhase?: 'Bidding' | 'Playing' | 'Scoring';

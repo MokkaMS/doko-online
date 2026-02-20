@@ -69,7 +69,7 @@ export const GameTable: React.FC = () => {
                 </span>
                 {state.currentPlayerIndex === idx && <span className="current-turn-indicator">★</span>}
               </div>
-              <span className="player-points">{p.points} Pkt</span>
+              <span className="player-points">{p.tournamentPoints} Pkt ({p.points} A)</span>
               <div className="badges-row">
                 {(p.id === humanPlayer.id || p.isRevealed || state.phase === 'Scoring') && (
                     <div className="team-badge">{p.team}</div>
@@ -113,18 +113,31 @@ export const GameTable: React.FC = () => {
         <button onClick={goToMainMenu}>Hauptmenü</button>
       </div>
 
-      {state.phase === 'Scoring' && (
+      {state.phase === 'Scoring' && state.lastGameResult && (
         <div className="scoring-overlay">
           <h2>SPIEL BEENDET</h2>
-          {(() => {
-            const reP = state.players.filter(p => p.team === 'Re').reduce((s, p) => s + p.points, 0);
-            const reWins = reP > 120;
-            return (
-              <div className="scoring-results">
-                <div className="winner-banner">{reWins ? 'TEAM RE GEWINNT!' : 'TEAM KONTRA GEWINNT!'}</div>
-              </div>
-            );
-          })()}
+          <div className="scoring-results">
+            <div className="winner-banner">
+                {state.lastGameResult.winner === 'Re' ? 'TEAM RE GEWINNT!' : 'TEAM KONTRA GEWINNT!'}
+            </div>
+            <div className="score-details">
+                <div className="team-score-column">
+                    <h3>Re ({state.lastGameResult.reAugen} Augen)</h3>
+                    <ul>
+                        {state.lastGameResult.details.re.map((d, i) => <li key={i}>+1 {d}</li>)}
+                    </ul>
+                </div>
+                <div className="team-score-column">
+                    <h3>Kontra ({state.lastGameResult.kontraAugen} Augen)</h3>
+                    <ul>
+                        {state.lastGameResult.details.kontra.map((d, i) => <li key={i}>+1 {d}</li>)}
+                    </ul>
+                </div>
+            </div>
+            <div className="final-score-summary">
+                Punkte für Gewinner: {state.lastGameResult.winningPoints}
+            </div>
+          </div>
           <button className="menu-button" onClick={startNewGame}>Nächste Runde</button>
         </div>
       )}

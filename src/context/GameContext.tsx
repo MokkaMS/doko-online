@@ -158,37 +158,6 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           );
 
           const winner = updatedPlayers[winnerIndex];
-          const winnersTeam = prevState.rePlayerIds.includes(winner.id) ? 're' : 'kontra';
-          const losersTeam = winnersTeam === 're' ? 'kontra' : 're';
-          
-          const newSpecialPoints = { ...prevState.specialPoints };
-
-          // 1. Fuchs gefangen? (Karo Ass)
-          prevState.currentTrick.forEach((card, i) => {
-            if (card.suit === Suit.Karo && card.value === CardValue.Ass) {
-              const cardOwnerIndex = (prevState.trickStarterIndex + i) % 4;
-              const cardOwnerId = prevState.players[cardOwnerIndex].id;
-              const ownerTeam = prevState.rePlayerIds.includes(cardOwnerId) ? 're' : 'kontra';
-              
-              if (ownerTeam !== winnersTeam && settings.fuchsGefangen) {
-                newSpecialPoints[winnersTeam].push('Fuchs gefangen');
-              }
-            }
-          });
-
-          // 2. Doppelkopf? (>= 40 Punkte)
-          if (trickPoints >= 40 && settings.doppelkopfPunkte) {
-            newSpecialPoints[winnersTeam].push('Doppelkopf');
-          }
-
-          // 3. Karlchen am End? (Letzter Stich mit Kreuz Bube)
-          const isLastTrick = updatedPlayers.every(p => p.hand.length === 0);
-          if (isLastTrick && settings.karlchen) {
-             const winnersCard = prevState.currentTrick[(winnerIndex - prevState.trickStarterIndex + 4) % 4];
-             if (winnersCard.suit === Suit.Kreuz && winnersCard.value === CardValue.Bube) {
-                newSpecialPoints[winnersTeam].push('Karlchen am End');
-             }
-          }
 
           // Hochzeit: Find partner in first 3 tricks
           const totalTricksCompleted = updatedPlayers.reduce((sum, p) => sum + p.tricks.length, 0);
@@ -196,25 +165,42 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
               if (totalTricksCompleted <= 3) {
                   if (!prevState.rePlayerIds.includes(winner.id)) {
                       updatedPlayers = updatedPlayers.map((p, idx) => idx === winnerIndex ? { ...p, team: 'Re', isRevealed: true } : p);
-                      // Update rePlayerIds in state - we can do this by returning it in the new state
                   }
               }
           }
 
-          let finalPlayers = updatedPlayers;
-          let finalPhase = isLastTrick ? 'Scoring' : 'Playing';
-          if (isLastTrick) finalPlayers = GameEngine.revealFinalTeams({ ...prevState, players: updatedPlayers });
+          const isLastTrick = updatedPlayers.every(p => p.hand.length === 0);
+          const special = GameEngine.checkTrickSpecialPoints(
+               prevState.currentTrick,
+               winnerIndex,
+               prevState.trickStarterIndex,
+               updatedPlayers,
+               settings,
+               isLastTrick
+          );
 
-          return {
+          const newSpecialPoints = {
+              re: [...prevState.specialPoints.re, ...special.re],
+              kontra: [...prevState.specialPoints.kontra, ...special.kontra]
+          };
+
+          let finalState = {
             ...prevState,
-            players: finalPlayers,
-            rePlayerIds: finalPlayers.filter(p => p.team === 'Re').map(p => p.id),
+            players: updatedPlayers,
+            rePlayerIds: updatedPlayers.filter(p => p.team === 'Re').map(p => p.id),
             currentTrick: [],
             currentPlayerIndex: winnerIndex,
             trickStarterIndex: winnerIndex,
             specialPoints: newSpecialPoints,
-            phase: finalPhase as any,
-          };
+            phase: isLastTrick ? 'Scoring' : 'Playing',
+          } as GameState;
+
+          if (isLastTrick) {
+             finalState.players = GameEngine.revealFinalTeams(finalState);
+             finalState = GameEngine.calculateGameResult(finalState);
+          }
+
+          return finalState;
         });
         setIsCleaning(false);
       }, 1500);

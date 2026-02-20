@@ -8,7 +8,7 @@ interface MainMenuProps {
 }
 
 export const MainMenu: React.FC<MainMenuProps> = ({ showMultiplayer, setShowMultiplayer }) => {
-  const { state, startNewGame, resumeGame, openSettings } = useGame();
+  const { state, resumeGame } = useGame();
 
   if (showMultiplayer) {
     return <MultiplayerSetup onBack={() => setShowMultiplayer(false)} />;
@@ -18,12 +18,10 @@ export const MainMenu: React.FC<MainMenuProps> = ({ showMultiplayer, setShowMult
     <div className="game-container main-menu">
       <h1 className="menu-title">DOPPELKOPF</h1>
       <div className="menu-content">
-        <button className="menu-button" onClick={startNewGame}>Einzelspieler</button>
         <button className="menu-button" onClick={() => setShowMultiplayer(true)}>Multiplayer</button>
         {state.lastActivePhase && state.lastActivePhase !== 'Scoring' && (
            <button className="menu-button" onClick={resumeGame}>Weiterspielen</button>
         )}
-        <button className="menu-button" onClick={openSettings}>Einstellungen</button>
       </div>
     </div>
   );

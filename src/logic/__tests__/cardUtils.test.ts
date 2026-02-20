@@ -110,12 +110,10 @@ describe('cardUtils', () => {
 
       // Even with DullenAlsHoechste?
       // Based on code analysis:
-      // if (card.value === CardValue.Zehn && card.suit === Suit.Herz && settings.dullenAlsHoechste) return true;
-      // THEN check gameType.
-      // So Dulle IS trump in Fleischlos if setting is on.
+      // Dulle is NOT trump in Fleischlos if setting is on (Solo rule).
       const settingsWithDulle = { ...defaultSettings, dullenAlsHoechste: true };
       const herz10 = createCard(Suit.Herz, CardValue.Zehn);
-      expect(isTrump(herz10, GameType.Fleischlos, null, settingsWithDulle)).toBe(true);
+      expect(isTrump(herz10, GameType.Fleischlos, null, settingsWithDulle)).toBe(false);
     });
   });
 

@@ -76,11 +76,24 @@ const executePlayCard = (roomId: string, playerId: string, card: Card) => {
   const currentPlayer = state.players[currentPlayerIndex];
   if (currentPlayer.id !== playerId) return;
 
-  const newHand = currentPlayer.hand.filter(c => c.id !== card.id);
-  const newTrick = [...state.currentTrick, card];
+  // Security: Verify card exists in player's hand
+  const cardInHand = currentPlayer.hand.find(c => c.id === card.id);
+  if (!cardInHand) {
+    console.warn(`Player ${playerId} attempted to play a card not in hand: ${JSON.stringify(card)}`);
+    return;
+  }
+
+  // Security: Verify move is valid according to game rules
+  if (!GameEngine.isValidMove(cardInHand, currentPlayer, state.currentTrick, state.gameType, state.trumpSuit, room.settings)) {
+    console.warn(`Player ${playerId} attempted an invalid move: ${JSON.stringify(cardInHand)}`);
+    return;
+  }
+
+  const newHand = currentPlayer.hand.filter(c => c.id !== cardInHand.id);
+  const newTrick = [...state.currentTrick, cardInHand];
   
   // Reveal team if Kreuz-Dame is played
-  if (card.suit === Suit.Kreuz && card.value === CardValue.Dame) {
+  if (cardInHand.suit === Suit.Kreuz && cardInHand.value === CardValue.Dame) {
       player.isRevealed = true;
   }
 

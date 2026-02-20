@@ -9,7 +9,8 @@
     "test": "vitest",
     "lint": "eslint .",
     "preview": "vite preview",
-    "server": "cd server && npm start"
+    "server": "cd server && npm start",
+    "start": "npm install && npm run build && cd server && npm install && npm run build && npm run serve"
   },
   "dependencies": {
     "react": "^19.2.0",

@@ -3,7 +3,7 @@ import { io, Socket } from 'socket.io-client';
 import { Card, GameState, Player, GameSettings, GameType, Suit, CardValue } from '../logic/types';
 import { GameEngine } from '../logic/GameEngine';
 import { Bot } from '../logic/Bot';
-import { getStoredPlayerId } from '../utils/storage';
+import { getStoredPlayerId, getStoredRoomId, setStoredRoomId } from '../utils/storage';
 
 const socket: Socket = io({ autoConnect: false });
 
@@ -51,6 +51,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     socket.on('room_created', ({ roomId, players, settings }: { roomId: string, players: any[], settings: GameSettings }) => {
       setRoomId(roomId);
+      setStoredRoomId(roomId);
       setSettings(settings);
       // Update local lobby state? Or wait for 'game_started'?
       // We can use a special 'Lobby' state.
@@ -59,6 +60,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     socket.on('joined_room', ({ roomId, players, settings }: { roomId: string, players: any[], settings: GameSettings }) => {
       setRoomId(roomId);
+      setStoredRoomId(roomId);
       setSettings(settings);
       setState(prev => ({ ...prev, phase: 'Lobby', players: players.map(p => ({ ...p, isBot: p.isBot || false, hand: [], tricks: [], points: 0, team: 'Unknown' })) }));
     });
@@ -142,8 +144,6 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
     });
   }, [settings, isCleaning, roomId]);
-
-  // ... (addNotification logic removed as requested previously) ...
 
   useEffect(() => {
     if (!roomId && state.currentTrick.length === 4 && isCleaning) {
@@ -264,7 +264,11 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
               announceReKontra(currentPlayer.id, isRe ? 'Re' : 'Kontra');
             }
           }
-          playCard(currentPlayer.id, Bot.decideMove(currentPlayer, state, settings));
+          try {
+             playCard(currentPlayer.id, Bot.decideMove(currentPlayer, state, settings));
+          } catch (e) {
+             console.error("Bot failed to move:", e);
+          }
         }, 800);
         return () => clearTimeout(timer);
       }
@@ -277,19 +281,27 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         socket.emit('start_game', roomId);
         return;
     }
+    setStoredRoomId(null);
     const initialState = GameEngine.rotateDealer(state, settings);
     setState({ ...initialState, phase: 'Bidding' });
   };
   
   const resumeGame = useCallback(() => {
+    const storedRoomId = getStoredRoomId();
+    if (storedRoomId && playerId) {
+        // Attempt reconnection
+        if (!socket.connected) socket.connect();
+        socket.emit('join_room', { roomId: storedRoomId, playerName: 'Resuming Player', playerId });
+        return;
+    }
     setState(prev => ({ ...prev, phase: prev.lastActivePhase || 'Playing' }));
-  }, []);
+  }, [playerId]);
 
   const goToMainMenu = useCallback(() => {
     if (roomId) {
         // Disconnect logic?
         socket.disconnect();
-        socket.connect(); // Reconnect for new session
+        // Do NOT setRoomId(null) in storage.
         setRoomId(null);
     }
     setState(prev => ({ ...prev, phase: 'MainMenu', lastActivePhase: prev.phase as any }));

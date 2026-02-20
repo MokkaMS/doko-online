@@ -4,6 +4,10 @@ import { isTrump, getCardPower } from './cardUtils';
 
 export class Bot {
   static decideMove(player: Player, state: GameState, settings: GameSettings): Card {
+    if (!player.hand || player.hand.length === 0) {
+      throw new Error(`Bot ${player.name} has no cards!`);
+    }
+
     const legalMoves = player.hand.filter(card =>
       GameEngine.isValidMove(card, player, state.currentTrick, state.gameType, state.trumpSuit, settings)
     );

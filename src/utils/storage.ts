@@ -13,3 +13,15 @@ export const getStoredPlayerId = (): string => {
 
   return storedId;
 };
+
+export const getStoredRoomId = (): string | null => {
+  return localStorage.getItem('doppelkopf_room_id');
+};
+
+export const setStoredRoomId = (roomId: string | null) => {
+  if (roomId) {
+    localStorage.setItem('doppelkopf_room_id', roomId);
+  } else {
+    localStorage.removeItem('doppelkopf_room_id');
+  }
+};

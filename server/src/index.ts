@@ -179,10 +179,6 @@ const executePlayCard = (roomId: string, playerId: string, card: Card) => {
       winner.points += trickPoints;
       winner.tricks.push(state.currentTrick);
 
-      state.currentTrick = [];
-      state.currentPlayerIndex = winnerIndex;
-      state.trickStarterIndex = winnerIndex;
-
       // Hochzeit: Find partner in first 3 tricks
       const totalTricksCompleted = state.players.reduce((sum, p) => sum + p.tricks.length, 0);
       if (state.gameType === GameType.Hochzeit && state.rePlayerIds.length === 1) {
@@ -197,10 +193,32 @@ const executePlayCard = (roomId: string, playerId: string, card: Card) => {
           // After 3 tricks, if still alone, they stay alone (team already set to Re)
       }
 
+      // Special Points Evaluation
+      const isLastTrick = state.players.every(p => p.hand.length === 0);
+      const special = GameEngine.checkTrickSpecialPoints(
+          state.currentTrick,
+          winnerIndex,
+          state.trickStarterIndex,
+          state.players,
+          room.settings,
+          isLastTrick
+      );
+      state.specialPoints.re.push(...special.re);
+      state.specialPoints.kontra.push(...special.kontra);
+
+      state.currentTrick = [];
+      state.currentPlayerIndex = winnerIndex;
+      state.trickStarterIndex = winnerIndex;
+
       if (state.players.every(p => p.hand.length === 0)) {
         state.phase = 'Scoring';
         const finalPlayers = GameEngine.revealFinalTeams(state);
         state.players = finalPlayers;
+
+        const finalState = GameEngine.calculateGameResult(state);
+        room.gameState = finalState;
+        emitToRoom(roomId, 'game_state_update', finalState);
+        return; // Don't double emit
       }
 
       emitToRoom(roomId, 'game_state_update', state);
@@ -348,6 +366,7 @@ io.on('connection', (socket: Socket) => {
         });
       }
 
+      const previousState = room.gameState;
       const playerNames = room.players.map(p => p.name);
       const initialState = GameEngine.createInitialState(playerNames, room.settings);
       initialState.phase = 'Bidding';
@@ -358,6 +377,14 @@ io.on('connection', (socket: Socket) => {
           p.isBot = !!roomPlayer.isBot;
           p.connected = roomPlayer.connected;
           p.disconnectTime = roomPlayer.disconnectTime;
+
+          // Preserve tournament points
+          if (previousState) {
+              const oldPlayer = previousState.players.find(op => op.id === p.id);
+              if (oldPlayer) {
+                  p.tournamentPoints = oldPlayer.tournamentPoints;
+              }
+          }
       });
 
       const stateWithTeams = GameEngine.determineTeams(initialState);

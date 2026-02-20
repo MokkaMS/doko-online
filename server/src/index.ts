@@ -5,6 +5,7 @@ import cors from 'cors';
 import { GameEngine } from './logic/GameEngine';
 import { GameState, Card, GameSettings, Player, GameType, Suit, CardValue } from './logic/types';
 import { Bot } from './logic/Bot';
+import { validatePlayerName } from './utils/validation';
 
 const app = express();
 app.use(cors());
@@ -24,7 +25,7 @@ interface Room {
   settings: GameSettings;
 }
 
-const rooms: Record<string, Room> = {};
+const rooms: Record<string, Room> = Object.create(null);
 
 // Helper to generate room ID
 const generateRoomId = () => {
@@ -138,10 +139,15 @@ io.on('connection', (socket: Socket) => {
   console.log('User connected:', socket.id);
 
   socket.on('create_room', (playerName: string) => {
+    const error = validatePlayerName(playerName);
+    if (error) {
+      socket.emit('error', error);
+      return;
+    }
     const roomId = generateRoomId();
     rooms[roomId] = {
       id: roomId,
-      players: [{ id: socket.id, name: playerName, socketId: socket.id, ready: true }],
+      players: [{ id: socket.id, name: playerName.trim(), socketId: socket.id, ready: true }],
       gameState: null,
       settings: { ...defaultSettings }
     };
@@ -150,13 +156,18 @@ io.on('connection', (socket: Socket) => {
   });
 
   socket.on('join_room', ({ roomId, playerName }: { roomId: string, playerName: string }) => {
+    const error = validatePlayerName(playerName);
+    if (error) {
+      socket.emit('error', error);
+      return;
+    }
     const room = rooms[roomId];
-    if (room) {
+    if (room && typeof room !== 'function') {
       if (room.players.length >= 4) {
         socket.emit('error', 'Room is full');
         return;
       }
-      room.players.push({ id: socket.id, name: playerName, socketId: socket.id, ready: true });
+      room.players.push({ id: socket.id, name: playerName.trim(), socketId: socket.id, ready: true });
       socket.join(roomId);
       io.to(roomId).emit('player_joined', room.players);
       socket.emit('joined_room', { roomId, players: room.players, settings: room.settings });

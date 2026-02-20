@@ -1,8 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { Card, GameState, Player, GameSettings, GameType, Suit, CardValue } from '../logic/types';
-import { GameEngine } from '../logic/GameEngine';
-import { Bot } from '../logic/Bot';
+import { Card, GameState, Player, GameSettings, GameType, Suit, CardValue, GameEngine, Bot } from '@doppelkopf/game-logic';
 
 const socket: Socket = io({ autoConnect: false });
 

@@ -1,7 +1,6 @@
 import React, { useCallback, useMemo } from 'react';
 import { useGame } from '../context/GameContext';
-import { Card, Suit, CardValue } from '../logic/types';
-import { sortCards } from '../logic/cardUtils';
+import { Card, Suit, CardValue, sortCards } from '@doppelkopf/game-logic';
 import { CardComponent } from './CardComponent';
 
 export const GameTable: React.FC = () => {

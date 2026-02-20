@@ -3,9 +3,7 @@ import http from 'http';
 import path from 'path';
 import { Server, Socket } from 'socket.io';
 import cors from 'cors';
-import { GameEngine } from './logic/GameEngine';
-import { GameState, Card, GameSettings, GameType, Suit, CardValue } from './logic/types';
-import { Bot } from './logic/Bot';
+import { GameEngine, GameState, Card, GameSettings, GameType, Suit, CardValue, Bot } from '@doppelkopf/game-logic';
 import { validatePlayerName } from './utils/validation';
 
 const app = express();

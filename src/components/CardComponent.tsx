@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { Card, Suit, CardValue } from '../logic/types';
+import { Card, Suit, CardValue } from '@doppelkopf/game-logic';
 
 const suitSymbols: Record<Suit, string> = {
   [Suit.Kreuz]: '♣',

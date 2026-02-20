@@ -1,4 +1,4 @@
-import { expect, test, describe } from "bun:test";
+import { expect, test, describe } from "vitest";
 import { GameEngine } from './GameEngine';
 import { CardValue, Suit, Card } from './types';
 

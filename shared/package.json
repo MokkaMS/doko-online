@@ -1,0 +1,18 @@
+{
+  "name": "@doppelkopf/game-logic",
+  "version": "1.0.0",
+  "description": "Shared game logic for Doppelkopf",
+  "main": "dist/index.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "npm run build:cjs && npm run build:esm",
+    "build:cjs": "tsc",
+    "build:esm": "tsc --module es2020 --outDir dist/esm",
+    "test": "vitest run"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

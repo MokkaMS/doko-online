@@ -3,19 +3,25 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "workspaces": [
+    "server",
+    "shared"
+  ],
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "npm run build -w @doppelkopf/game-logic && tsc -b && vite build",
+    "build:shared": "npm run build -w @doppelkopf/game-logic",
     "test": "vitest",
     "lint": "eslint .",
     "preview": "vite preview",
-    "server": "cd server && npm start",
-    "start": "npm install && npm run build && cd server && npm install && npm run build && npm run serve"
+    "server": "npm run start -w doppelkopf-server",
+    "start": "npm install && npm run build && npm run build -w doppelkopf-server && npm run serve -w doppelkopf-server"
   },
   "dependencies": {
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "socket.io-client": "^4.8.3"
+    "socket.io-client": "^4.8.3",
+    "@doppelkopf/game-logic": "*"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

@@ -5,37 +5,38 @@ WORKDIR /app
 
 # Copy package.json files for dependency installation
 COPY package*.json ./
-COPY server/package*.json ./server/
+COPY server/package.json ./server/
+COPY shared/package.json ./shared/
 
-# Install dependencies
-# Root dependencies (frontend)
+# Install dependencies (workspaces aware)
 RUN npm ci
-# Server dependencies (backend)
-RUN cd server && npm ci
 
 # Copy source code
 COPY . .
 
-# Build frontend
+# Build shared and frontend (root build script does shared then frontend)
 RUN npm run build
 
 # Build backend
-RUN cd server && npm run build
+RUN npm run build -w doppelkopf-server
 
 # Stage 2: Run the application
 FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy built frontend assets
+# Copy package.json files for production install
+COPY package*.json ./
+COPY server/package.json ./server/
+COPY shared/package.json ./shared/
+
+# Install production dependencies (including shared workspace link)
+RUN npm ci --omit=dev
+
+# Copy built artifacts
 COPY --from=builder /app/dist ./dist
-
-# Copy built backend code
 COPY --from=builder /app/server/dist ./server/dist
-COPY --from=builder /app/server/package*.json ./server/
-
-# Install production dependencies for the server
-RUN cd server && npm ci --omit=dev
+COPY --from=builder /app/shared/dist ./shared/dist
 
 # Set the environment variable for the port
 ENV PORT=5173

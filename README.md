@@ -1,73 +1,71 @@
-# React + TypeScript + Vite
+# Doppelkopf (React + Node.js)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Willkommen zu dieser webbasierten Implementierung des beliebten Kartenspiels **Doppelkopf**. Diese Anwendung ermöglicht es Ihnen, Doppelkopf direkt im Browser zu spielen, entweder gegen Computergegner (Bots) oder online mit Freunden im Multiplayer-Modus.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Spielmodi**:
+    - **Einzelspieler**: Spielen Sie sofort gegen 3 Computergegner.
+    - **Multiplayer**: Erstellen Sie private Räume und spielen Sie mit Freunden. Fehlende Spieler können durch Bots aufgefüllt werden.
+- **Regelwerk**:
+    - Unterstützt **Normalspiel**, **Hochzeit**, **Damen-Solo**, **Buben-Solo**, **Farben-Solo** und **Fleischlos**.
+    - Automatische Erkennung von Re/Kontra-Parteien.
+    - Sonderpunkte: **Fuchs gefangen**, **Karlchen am End**, **Doppelkopf** (>40 Augen).
+- **Einstellungen**:
+    - Konfigurierbare Regeln (z.B. "Mit Neunen", "Dullen als höchste Trümpfe", "Schweinchen").
+- **Benutzeroberfläche**:
+    - Intuitive Bedienung per Mausklick.
+    - Anzeige von Punkten, Ansagen und gespielten Stichen.
+    - Visuelle Darstellung der Karten und des Spieltischs.
 
-## React Compiler
+## Installation & Start
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Um das Projekt lokal auszuführen, benötigen Sie [Node.js](https://nodejs.org/) (Version 18 oder neuer empfohlen).
 
-## Expanding the ESLint configuration
+Das Projekt besteht aus zwei Teilen: dem **Frontend** (React) und dem **Backend** (Node.js Server). Beide müssen gleichzeitig laufen.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### 1. Repository klonen
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+git clone <repository-url>
+cd doppelkopf-game
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 2. Backend starten
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Der Server verwaltet die Spielzustände und Multiplayer-Verbindungen. Öffnen Sie ein Terminal und navigieren Sie in den `server`-Ordner:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+cd server
+npm install
+npm start
 ```
+Der Server läuft nun auf `http://localhost:3001`.
+
+### 3. Frontend starten
+
+Die Benutzeroberfläche wird mit Vite gestartet. Öffnen Sie ein **zweites, neues** Terminal im Hauptverzeichnis des Projekts:
+
+```bash
+npm install
+npm run dev
+```
+Das Frontend ist nun unter der im Terminal angezeigten Adresse erreichbar (meist `http://localhost:5173`). Öffnen Sie diese Adresse in Ihrem Browser.
+
+## Technologien
+
+- **Frontend**: [React 19](https://react.dev/), [Vite](https://vitejs.dev/), TypeScript
+- **Backend**: [Node.js](https://nodejs.org/), [Express](https://expressjs.com/), [Socket.IO](https://socket.io/)
+- **Kommunikation**: Echtzeit-Datenübertragung via WebSockets.
+
+## Bekannte Probleme (Known Issues)
+
+- **Verbindung**: Die Server-Adresse ist im Code derzeit fest auf `http://localhost:3001` eingestellt (`src/context/GameContext.tsx`). Für einen Betrieb im Netzwerk oder Internet muss diese Adresse angepasst werden.
+- **UI-Positionierung**: Die Position der Spieler am Tisch ist statisch und passt sich bei sehr kleinen Bildschirmen (Mobile) möglicherweise nicht optimal an.
+- **Speicherung**: Es gibt keine Datenbankanbindung. Spielstände und Statistiken werden nur im Arbeitsspeicher gehalten und gehen verloren, wenn der Server neu gestartet wird.
+- **Bots**: Die Computergegner spielen nach einer einfachen Heuristik und können komplexe Spielsituationen nicht immer optimal lösen.
+- **Chat**: Es gibt aktuell keine Chat-Funktion im Multiplayer-Modus.
+
+## Lizenz
+
+Dieses Projekt wurde zu Lern- und Demonstrationszwecken erstellt.

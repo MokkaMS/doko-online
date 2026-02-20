@@ -27,7 +27,7 @@ Das Projekt besteht aus zwei Teilen: dem **Frontend** (React) und dem **Backend*
 ### 1. Repository klonen
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/MokkaMS/doko-online.git
 cd doppelkopf-game
 ```
 

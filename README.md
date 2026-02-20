@@ -1,4 +1,4 @@
-# Doppelkopf (React + Node.js)
+# Doppelkopf
 
 Willkommen zu dieser webbasierten Implementierung des beliebten Kartenspiels **Doppelkopf**. Diese Anwendung ermöglicht es Ihnen, Doppelkopf direkt im Browser zu spielen, entweder gegen Computergegner (Bots) oder online mit Freunden im Multiplayer-Modus.
 

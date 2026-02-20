@@ -34,12 +34,21 @@ const io = new Server(server, {
 
 interface Room {
   id: string;
-  players: { id: string; name: string; socketId: string; ready: boolean; isBot?: boolean }[];
+  players: {
+      id: string;
+      name: string;
+      socketId: string;
+      ready: boolean;
+      isBot?: boolean;
+      connected: boolean;
+      disconnectTime?: number;
+  }[];
   gameState: GameState | null;
   settings: GameSettings;
 }
 
 const rooms: Record<string, Room> = Object.create(null);
+const disconnectTimeouts = new Map<string, NodeJS.Timeout>();
 
 const MAX_ROOMS = 100;
 const CREATE_ROOM_RATE_LIMIT = 30000; // 30 seconds
@@ -81,8 +90,17 @@ const emitToRoom = (roomId: string, event: string, state: GameState) => {
   const room = rooms[roomId];
   if (!room) return;
 
+  // Sync connection status to state players
+  state.players.forEach(gp => {
+      const rp = room.players.find(rp => rp.id === gp.id);
+      if (rp) {
+          gp.connected = rp.connected;
+          gp.disconnectTime = rp.disconnectTime;
+      }
+  });
+
   room.players.forEach(p => {
-    if (!p.isBot && p.socketId) {
+    if (!p.isBot && p.socketId && p.connected) {
       const sanitized = sanitizeState(state, p.id);
       io.to(p.socketId).emit(event, sanitized);
     }
@@ -199,7 +217,7 @@ const executePlayCard = (roomId: string, playerId: string, card: Card) => {
 io.on('connection', (socket: Socket) => {
   console.log('User connected:', socket.id);
 
-  socket.on('create_room', (playerName: string) => {
+  socket.on('create_room', ({ playerName, playerId }: { playerName: string, playerId: string }) => {
     // 1. Check Global Limit
     if (Object.keys(rooms).length >= MAX_ROOMS) {
       socket.emit('error', 'Server is full (max 100 rooms)');
@@ -230,9 +248,16 @@ io.on('connection', (socket: Socket) => {
     lastRoomCreation.set(socket.id, now);
 
     const roomId = generateRoomId();
+    // Use provided playerId
     rooms[roomId] = {
       id: roomId,
-      players: [{ id: socket.id, name: playerName.trim(), socketId: socket.id, ready: true }],
+      players: [{
+          id: playerId,
+          name: playerName.trim(),
+          socketId: socket.id,
+          ready: true,
+          connected: true
+      }],
       gameState: null,
       settings: { ...defaultSettings }
     };
@@ -240,7 +265,7 @@ io.on('connection', (socket: Socket) => {
     socket.emit('room_created', { roomId, players: rooms[roomId].players, settings: rooms[roomId].settings });
   });
 
-  socket.on('join_room', ({ roomId, playerName }: { roomId: string, playerName: string }) => {
+  socket.on('join_room', ({ roomId, playerName, playerId }: { roomId: string, playerName: string, playerId: string }) => {
     const error = validatePlayerName(playerName);
     if (error) {
       socket.emit('error', error);
@@ -248,14 +273,44 @@ io.on('connection', (socket: Socket) => {
     }
     const room = rooms[roomId];
     if (room && typeof room !== 'function') {
-      if (room.players.length >= 4) {
-        socket.emit('error', 'Room is full');
-        return;
+      const existingPlayer = room.players.find(p => p.id === playerId);
+      if (existingPlayer) {
+          // Reconnection logic
+          existingPlayer.socketId = socket.id;
+          existingPlayer.connected = true;
+          delete existingPlayer.disconnectTime;
+
+          const timer = disconnectTimeouts.get(playerId);
+          if (timer) {
+              clearTimeout(timer);
+              disconnectTimeouts.delete(playerId);
+          }
+
+          socket.join(roomId);
+          io.to(roomId).emit('player_joined', room.players);
+
+          socket.emit('joined_room', { roomId, players: room.players, settings: room.settings });
+          if (room.gameState) {
+             const sanitized = sanitizeState(room.gameState, playerId);
+             socket.emit('game_state_update', sanitized);
+          }
+      } else {
+          // New join
+          if (room.players.length >= 4) {
+            socket.emit('error', 'Room is full');
+            return;
+          }
+          room.players.push({
+              id: playerId,
+              name: playerName.trim(),
+              socketId: socket.id,
+              ready: true,
+              connected: true
+          });
+          socket.join(roomId);
+          io.to(roomId).emit('player_joined', room.players);
+          socket.emit('joined_room', { roomId, players: room.players, settings: room.settings });
       }
-      room.players.push({ id: socket.id, name: playerName.trim(), socketId: socket.id, ready: true });
-      socket.join(roomId);
-      io.to(roomId).emit('player_joined', room.players);
-      socket.emit('joined_room', { roomId, players: room.players, settings: room.settings });
     } else {
       socket.emit('error', 'Room not found');
     }
@@ -265,7 +320,14 @@ io.on('connection', (socket: Socket) => {
     const room = rooms[roomId];
     if (room && room.players.length < 4) {
       const botId = `bot-${Math.random().toString(36).substr(2, 5)}`;
-      room.players.push({ id: botId, name: `Bot ${room.players.length}`, socketId: botId, ready: true, isBot: true });
+      room.players.push({
+          id: botId,
+          name: `Bot ${room.players.length}`,
+          socketId: botId,
+          ready: true,
+          isBot: true,
+          connected: true
+      });
       io.to(roomId).emit('player_joined', room.players);
     }
   });
@@ -276,7 +338,14 @@ io.on('connection', (socket: Socket) => {
       // Auto-fill with bots if less than 4
       while (room.players.length < 4) {
         const botId = `bot-${Math.random().toString(36).substr(2, 5)}`;
-        room.players.push({ id: botId, name: `Bot ${room.players.length}`, socketId: botId, ready: true, isBot: true });
+        room.players.push({
+            id: botId,
+            name: `Bot ${room.players.length}`,
+            socketId: botId,
+            ready: true,
+            isBot: true,
+            connected: true
+        });
       }
 
       const playerNames = room.players.map(p => p.name);
@@ -287,6 +356,8 @@ io.on('connection', (socket: Socket) => {
           const roomPlayer = room.players[idx];
           p.id = roomPlayer.id;
           p.isBot = !!roomPlayer.isBot;
+          p.connected = roomPlayer.connected;
+          p.disconnectTime = roomPlayer.disconnectTime;
       });
 
       const stateWithTeams = GameEngine.determineTeams(initialState);
@@ -368,11 +439,24 @@ io.on('connection', (socket: Socket) => {
   };
 
   socket.on('play_card', ({ roomId, card }: { roomId: string, card: Card }) => {
-      executePlayCard(roomId, socket.id, card);
+      // Find player by socket.id
+      const room = rooms[roomId];
+      if (room) {
+          const player = room.players.find(p => p.socketId === socket.id);
+          if (player) {
+              executePlayCard(roomId, player.id, card);
+          }
+      }
   });
 
   socket.on('submit_bid', ({ roomId, bid }: { roomId: string, bid: string }) => {
-      executeSubmitBid(roomId, socket.id, bid);
+      const room = rooms[roomId];
+      if (room) {
+          const player = room.players.find(p => p.socketId === socket.id);
+          if (player) {
+              executeSubmitBid(roomId, player.id, bid);
+          }
+      }
   });
 
   
@@ -381,9 +465,12 @@ io.on('connection', (socket: Socket) => {
        if (!room || !room.gameState) return;
        const state = room.gameState;
        
-       state.reKontraAnnouncements[socket.id] = type;
-       const player = state.players.find(p => p.id === socket.id);
-       if (player) player.isRevealed = true;
+       const player = room.players.find(p => p.socketId === socket.id);
+       if (!player) return;
+
+       state.reKontraAnnouncements[player.id] = type;
+       const gamePlayer = state.players.find(p => p.id === player.id);
+       if (gamePlayer) gamePlayer.isRevealed = true;
        
        emitToRoom(roomId, 'game_state_update', state);
   });
@@ -393,16 +480,42 @@ io.on('connection', (socket: Socket) => {
     lastRoomCreation.delete(socket.id);
 
     // Remove player from room? 
-    // Ideally yes, or mark as disconnected.
+    // Mark as disconnected.
     for (const roomId in rooms) {
         const room = rooms[roomId];
-        const playerIdx = room.players.findIndex(p => p.socketId === socket.id);
-        if (playerIdx !== -1) {
-            room.players.splice(playerIdx, 1);
-            io.to(roomId).emit('player_left', room.players);
-            if (room.players.length === 0) {
-                delete rooms[roomId];
+        const player = room.players.find(p => p.socketId === socket.id);
+        if (player) {
+            player.connected = false;
+            player.disconnectTime = Date.now();
+
+            // Notify others
+            io.to(roomId).emit('player_joined', room.players); // Update lobby list
+            if (room.gameState) {
+                // If game active, might want to notify via game state too?
+                // emitToRoom syncs connection status.
+                emitToRoom(roomId, 'game_state_update', room.gameState);
             }
+
+            const timer = setTimeout(() => {
+                const currentRoom = rooms[roomId];
+                if (!currentRoom) return; // Room might be gone
+
+                // Re-check connection status (use id as socketId might have changed if reconnected but somehow this timer not cleared? Unlikely)
+                const p = currentRoom.players.find(pl => pl.id === player.id);
+                if (p && !p.connected) {
+                    const idx = currentRoom.players.indexOf(p);
+                    if (idx !== -1) {
+                        currentRoom.players.splice(idx, 1);
+                        io.to(roomId).emit('player_left', currentRoom.players);
+                        if (currentRoom.players.length === 0) {
+                            delete rooms[roomId];
+                        }
+                    }
+                }
+                disconnectTimeouts.delete(player.id);
+            }, 120000); // 120s
+
+            disconnectTimeouts.set(player.id, timer);
             break;
         }
     }

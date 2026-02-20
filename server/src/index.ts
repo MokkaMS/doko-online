@@ -179,6 +179,8 @@ const executePlayCard = (roomId: string, playerId: string, card: Card) => {
       player.isRevealed = true;
   }
 
+  GameEngine.checkAndRevealRemainingPlayers(state);
+
   state.players[currentPlayerIndex].hand = newHand;
   state.currentTrick = newTrick;
   state.currentPlayerIndex = (currentPlayerIndex + 1) % 4;
@@ -206,12 +208,15 @@ const executePlayCard = (roomId: string, playerId: string, card: Card) => {
           if (totalTricksCompleted <= 3) {
               if (!state.rePlayerIds.includes(winner.id)) {
                   state.rePlayerIds.push(winner.id);
+                  state.kontraPlayerIds = state.kontraPlayerIds.filter(id => id !== winner.id);
                   winner.team = 'Re';
                   winner.isRevealed = true;
               }
           }
           // After 3 tricks, if still alone, they stay alone (team already set to Re)
       }
+
+      GameEngine.checkAndRevealRemainingPlayers(state);
 
       // Special Points Evaluation
       const isLastTrick = state.players.every(p => p.hand.length === 0);
@@ -488,6 +493,14 @@ io.on('connection', (socket: Socket) => {
              state.rePlayerIds = tempState.rePlayerIds;
              state.kontraPlayerIds = tempState.kontraPlayerIds;
              state.players = tempState.players;
+
+             if (finalType === GameType.Hochzeit) {
+                 state.players.forEach(p => {
+                     if (state.rePlayerIds.includes(p.id)) {
+                         p.isRevealed = true;
+                     }
+                 });
+             }
         }
         state.phase = 'Playing';
         state.currentPlayerIndex = (state.dealerIndex + 1) % 4;
@@ -553,6 +566,8 @@ io.on('connection', (socket: Socket) => {
 
        state.reKontraAnnouncements[player.id] = type;
        gamePlayer.isRevealed = true;
+
+       GameEngine.checkAndRevealRemainingPlayers(state);
        
        emitToRoom(roomId, 'game_state_update', state);
   });

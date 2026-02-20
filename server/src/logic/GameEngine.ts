@@ -128,6 +128,35 @@ export class GameEngine {
     }));
   }
 
+  static checkAndRevealRemainingPlayers(state: GameState): void {
+    const reIds = state.rePlayerIds;
+    const kontraIds = state.kontraPlayerIds;
+
+    // Only apply this logic for 2v2 situations (Standard Normal or Hochzeit with Partner)
+    if (reIds.length !== 2 || kontraIds.length !== 2) {
+      return;
+    }
+
+    const revealedReCount = state.players.filter(p => p.team === 'Re' && p.isRevealed).length;
+    const revealedKontraCount = state.players.filter(p => p.team === 'Kontra' && p.isRevealed).length;
+
+    if (revealedReCount === 2) {
+      // Reveal all Kontra
+      state.players.forEach(p => {
+        if (p.team === 'Kontra' && !p.isRevealed) {
+          p.isRevealed = true;
+        }
+      });
+    } else if (revealedKontraCount === 2) {
+      // Reveal all Re
+      state.players.forEach(p => {
+        if (p.team === 'Re' && !p.isRevealed) {
+          p.isRevealed = true;
+        }
+      });
+    }
+  }
+
   static isValidMove(card: Card, player: Player, trick: Card[], gameType: GameType, trumpSuit: Suit | null, settings: GameSettings): boolean {
     if (trick.length === 0) return true;
 

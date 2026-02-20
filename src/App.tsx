@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import './App.css';
 import { useGame } from './context/GameContext';
 import { WaitingRoom } from './components/WaitingRoom';
-import { SettingsScreen } from './components/SettingsScreen';
 import { MainMenu } from './components/MainMenu';
 import { GameTable } from './components/GameTable';
 
@@ -19,10 +18,6 @@ const App: React.FC = () => {
 
   if (state.phase === 'Lobby') {
       return <WaitingRoom />;
-  }
-
-  if (state.phase === 'Settings') {
-      return <SettingsScreen />;
   }
 
   if (state.phase === 'MainMenu') {

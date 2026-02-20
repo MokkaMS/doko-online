@@ -1,8 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { Card, GameState, Player, GameSettings, GameType, Suit, CardValue } from '../logic/types';
-import { GameEngine } from '../logic/GameEngine';
-import { Bot } from '../logic/Bot';
+import { Card, GameState, GameSettings, GameType } from '../logic/types';
 import { getStoredPlayerId, getStoredRoomId, setStoredRoomId } from '../utils/storage';
 
 const socket: Socket = io({ autoConnect: false });
@@ -37,12 +35,29 @@ const defaultSettings: GameSettings = {
   soloPrioritaet: true,
 };
 
+const initialGameState: GameState = {
+  players: [],
+  currentPlayerIndex: 0,
+  dealerIndex: 0,
+  currentTrick: [],
+  trickStarterIndex: 0,
+  trickWinnerIndex: null,
+  gameType: GameType.Normal,
+  trumpSuit: null,
+  rePlayerIds: [],
+  kontraPlayerIds: [],
+  announcements: {},
+  reKontraAnnouncements: {},
+  specialPoints: { re: [], kontra: [] },
+  notifications: [],
+  phase: 'MainMenu',
+};
+
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
 export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [settings, setSettings] = useState<GameSettings>(defaultSettings);
-  const [state, setState] = useState<GameState>(() => GameEngine.createInitialState(['Du', 'Bot 1', 'Bot 2', 'Bot 3'], defaultSettings));
-  const [isCleaning, setIsCleaning] = useState(false);
+  const [state, setState] = useState<GameState>(initialGameState);
   const [roomId, setRoomId] = useState<string | null>(null);
   const [playerId] = useState<string>(() => getStoredPlayerId());
 
@@ -53,8 +68,6 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setRoomId(roomId);
       setStoredRoomId(roomId);
       setSettings(settings);
-      // Update local lobby state? Or wait for 'game_started'?
-      // We can use a special 'Lobby' state.
       setState(prev => ({ ...prev, phase: 'Lobby', players: players.map(p => ({ ...p, isBot: p.isBot || false, hand: [], tricks: [], points: 0, team: 'Unknown' })) }));
     });
 
@@ -95,181 +108,25 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const announceReKontra = useCallback((pid: string, type: 'Re' | 'Kontra') => {
     if (roomId) {
         socket.emit('announce_rekontra', { roomId, type });
-        return;
     }
-    setState(prev => ({
-      ...prev,
-      players: prev.players.map(p => p.id === pid ? { ...p, isRevealed: true } : p),
-      reKontraAnnouncements: { ...prev.reKontraAnnouncements, [pid]: type }
-    }));
   }, [roomId]);
 
   const playCard = useCallback((pid: string, card: Card) => {
     if (roomId) {
         socket.emit('play_card', { roomId, card });
-        return;
     }
-    if (state.phase !== 'Playing') return;
-    if (isCleaning) return;
-    setState(prevState => {
-      const currentPlayerIndex = prevState.currentPlayerIndex;
-      const currentPlayer = prevState.players[currentPlayerIndex];
-      if (currentPlayer.id !== pid) return prevState;
-
-      if (!GameEngine.isValidMove(card, currentPlayer, prevState.currentTrick, prevState.gameType, prevState.trumpSuit, settings)) return prevState;
-
-      const newHand = currentPlayer.hand.filter(c => c.id !== card.id);
-      const newTrick = [...prevState.currentTrick, card];
-      const isKreuzDame = card.suit === Suit.Kreuz && card.value === CardValue.Dame;
-      
-      const updatedPlayers = prevState.players.map(p => {
-        if (p.id === pid) {
-          const updatedP = { ...p, hand: newHand };
-          if (isKreuzDame) {
-              updatedP.team = 'Re';
-              updatedP.isRevealed = true;
-          }
-          return updatedP;
-        }
-        return p;
-      });
-
-      if (newTrick.length === 4) setIsCleaning(true);
-
-      return {
-        ...prevState,
-        players: updatedPlayers,
-        currentTrick: newTrick,
-        currentPlayerIndex: (currentPlayerIndex + 1) % 4,
-      };
-    });
-  }, [settings, isCleaning, roomId]);
-
-  useEffect(() => {
-    if (!roomId && state.currentTrick.length === 4 && isCleaning) {
-      // Local cleaning logic
-      const timer = setTimeout(() => {
-        setState(prevState => {
-          const winnerIndex = GameEngine.evaluateTrick(prevState.currentTrick, prevState.trickStarterIndex, prevState.gameType, prevState.trumpSuit, settings);
-          const trickPoints = GameEngine.calculateTrickPoints(prevState.currentTrick);
-          
-          let updatedPlayers = prevState.players.map((p, idx) => 
-            idx === winnerIndex ? { ...p, points: p.points + trickPoints, tricks: [...p.tricks, prevState.currentTrick] } : p
-          );
-
-          const winner = updatedPlayers[winnerIndex];
-
-          // Hochzeit: Find partner in first 3 tricks
-          const totalTricksCompleted = updatedPlayers.reduce((sum, p) => sum + p.tricks.length, 0);
-          if (prevState.gameType === GameType.Hochzeit && prevState.rePlayerIds.length === 1) {
-              if (totalTricksCompleted <= 3) {
-                  if (!prevState.rePlayerIds.includes(winner.id)) {
-                      updatedPlayers = updatedPlayers.map((p, idx) => idx === winnerIndex ? { ...p, team: 'Re', isRevealed: true } : p);
-                  }
-              }
-          }
-
-          const isLastTrick = updatedPlayers.every(p => p.hand.length === 0);
-          const special = GameEngine.checkTrickSpecialPoints(
-               prevState.currentTrick,
-               winnerIndex,
-               prevState.trickStarterIndex,
-               updatedPlayers,
-               settings,
-               isLastTrick
-          );
-
-          const newSpecialPoints = {
-              re: [...prevState.specialPoints.re, ...special.re],
-              kontra: [...prevState.specialPoints.kontra, ...special.kontra]
-          };
-
-          let finalState = {
-            ...prevState,
-            players: updatedPlayers,
-            rePlayerIds: updatedPlayers.filter(p => p.team === 'Re').map(p => p.id),
-            currentTrick: [],
-            currentPlayerIndex: winnerIndex,
-            trickStarterIndex: winnerIndex,
-            specialPoints: newSpecialPoints,
-            phase: isLastTrick ? 'Scoring' : 'Playing',
-          } as GameState;
-
-          if (isLastTrick) {
-             finalState.players = GameEngine.revealFinalTeams(finalState);
-             finalState = GameEngine.calculateGameResult(finalState);
-          }
-
-          return finalState;
-        });
-        setIsCleaning(false);
-      }, 1500);
-      return () => clearTimeout(timer);
-    }
-  }, [state.currentTrick, isCleaning, settings, state.trickStarterIndex, roomId]);
+  }, [roomId]);
 
   const submitBid = useCallback((pid: string, bid: string) => {
     if (roomId) {
         socket.emit('submit_bid', { roomId, bid });
-        return;
     }
-    setState(prevState => {
-      const newBids = { ...prevState.announcements, [pid]: [bid] };
-      if (Object.keys(newBids).length === 4) {
-        const finalType = GameEngine.determineFinalGameType(Object.fromEntries(Object.entries(newBids).map(([p, b]) => [p, b[0]])));
-        let updatedPlayers = [...prevState.players];
-        if (['DamenSolo', 'BubenSolo', 'FarbenSolo', 'Fleischlos'].includes(finalType)) {
-             const soloPid = Object.entries(newBids).find(([p, b]) => b[0] === finalType)?.[0];
-             updatedPlayers = updatedPlayers.map(p => ({ ...p, team: p.id === soloPid ? 'Re' : 'Kontra', isRevealed: true }));
-        } else {
-            const stateWithTeams = GameEngine.determineTeams({ ...prevState, gameType: finalType as GameType });
-            updatedPlayers = stateWithTeams.players;
-        }
-        return { ...prevState, players: updatedPlayers, gameType: finalType as GameType, phase: 'Playing', announcements: newBids, currentPlayerIndex: (prevState.dealerIndex + 1) % 4, trickStarterIndex: (prevState.dealerIndex + 1) % 4 };
-      }
-      return { ...prevState, announcements: newBids, currentPlayerIndex: (prevState.currentPlayerIndex + 1) % 4 };
-    });
-  }, [settings, roomId]);
-
-  // Bot logic only active if NOT multiplayer
-  useEffect(() => {
-    if (roomId) return; 
-
-    const currentPlayer = state.players[state.currentPlayerIndex];
-    if (currentPlayer?.isBot) {
-      if (state.phase === 'Bidding') {
-        const timer = setTimeout(() => submitBid(currentPlayer.id, 'Gesund'), 500);
-        return () => clearTimeout(timer);
-      }
-      if (state.phase === 'Playing' && !isCleaning) {
-        const timer = setTimeout(() => {
-          // Bots should only announce Re/Kontra if they are in the correct team and have enough cards
-          if (!state.reKontraAnnouncements[currentPlayer.id] && currentPlayer.hand.length >= 10) {
-            const isRe = state.rePlayerIds.includes(currentPlayer.id);
-            if (Math.random() < 0.1) {
-              announceReKontra(currentPlayer.id, isRe ? 'Re' : 'Kontra');
-            }
-          }
-          try {
-             playCard(currentPlayer.id, Bot.decideMove(currentPlayer, state, settings));
-          } catch (e) {
-             console.error("Bot failed to move:", e);
-          }
-        }, 800);
-        return () => clearTimeout(timer);
-      }
-    }
-  }, [state.phase, state.currentPlayerIndex, submitBid, playCard, settings, isCleaning, state.players, announceReKontra, state.reKontraAnnouncements, roomId]);
+  }, [roomId]);
 
   const startNewGame = () => {
     if (roomId) {
-        // Only host can start? For now assume anyone
         socket.emit('start_game', roomId);
-        return;
     }
-    setStoredRoomId(null);
-    const initialState = GameEngine.rotateDealer(state, settings);
-    setState({ ...initialState, phase: 'Bidding' });
   };
   
   const resumeGame = useCallback(() => {
@@ -278,14 +135,11 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Attempt reconnection
         if (!socket.connected) socket.connect();
         socket.emit('join_room', { roomId: storedRoomId, playerName: 'Resuming Player', playerId });
-        return;
     }
-    setState(prev => ({ ...prev, phase: prev.lastActivePhase || 'Playing' }));
   }, [playerId]);
 
   const goToMainMenu = useCallback(() => {
     if (roomId) {
-        // Disconnect logic?
         socket.disconnect();
         // Do NOT setRoomId(null) in storage.
         setRoomId(null);
@@ -294,7 +148,11 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [roomId]);
 
   const openSettings = useCallback(() => {
-    setState(prev => ({ ...prev, phase: 'Settings', lastActivePhase: prev.phase as any }));
+    // Settings are now mostly for game rules which are set on server side by default.
+    // We can keep this empty or remove it. Keeping it to satisfy interface for now, or just setting phase if we kept a view.
+    // But since we removed SettingsScreen, maybe we don't need this.
+    // However, MainMenu.tsx still had openSettings destructured (before I removed it).
+    // Let's just do nothing or maybe log.
   }, []);
 
   const closeSettings = useCallback(() => {

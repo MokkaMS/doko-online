@@ -4,7 +4,7 @@ import path from 'path';
 import { Server, Socket } from 'socket.io';
 import cors from 'cors';
 import { GameEngine } from './logic/GameEngine';
-import { GameState, Card, GameSettings, Player, GameType, Suit, CardValue } from './logic/types';
+import { GameState, Card, GameSettings, GameType, Suit, CardValue } from './logic/types';
 import { Bot } from './logic/Bot';
 import { validatePlayerName } from './utils/validation';
 
@@ -33,6 +33,9 @@ const rooms: Record<string, Room> = Object.create(null);
 
 const MAX_ROOMS = 100;
 const CREATE_ROOM_RATE_LIMIT = 30000; // 30 seconds
+const BOT_TURN_DELAY_MS = 1000;
+const BOT_BID_DELAY_MS = 500;
+const TRICK_EVALUATION_DELAY_MS = 1500;
 const lastRoomCreation: Map<string, number> = new Map();
 
 // Helper to generate room ID
@@ -69,7 +72,7 @@ const handleBotTurns = (roomId: string) => {
       } catch (e) {
         console.error('Bot error:', e);
       }
-    }, 1000);
+    }, BOT_TURN_DELAY_MS);
   }
 };
 
@@ -151,7 +154,7 @@ const executePlayCard = (roomId: string, playerId: string, card: Card) => {
       if (state.phase === 'Playing') {
         handleBotTurns(roomId);
       }
-    }, 1500);
+    }, TRICK_EVALUATION_DELAY_MS);
   } else {
     handleBotTurns(roomId);
   }
@@ -264,7 +267,7 @@ io.on('connection', (socket: Socket) => {
                   setTimeout(() => {
                       // In index.ts, we need to handle bidding too
                       handleBotBid(roomId);
-                  }, 500);
+                  }, BOT_BID_DELAY_MS);
               }
           };
           checkBids();

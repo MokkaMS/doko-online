@@ -1,5 +1,6 @@
 import React from 'react';
 import { useGame } from '../context/GameContext';
+import './WaitingRoom.css';
 
 export const WaitingRoom: React.FC = () => {
   const { state, roomId, startGameMultiplayer, addBotMultiplayer, goToMainMenu, playerId } = useGame();
@@ -7,29 +8,29 @@ export const WaitingRoom: React.FC = () => {
   return (
     <div className="game-container main-menu">
       <h1 className="menu-title">WARTERAUM</h1>
-      <h2 style={{color:'white'}}>Raum ID: <span style={{color:'#ffeb3b', fontSize:'40px', letterSpacing:'5px'}}>{roomId}</span></h2>
+      <h2 className="room-id-header">Raum ID: <span className="room-id-value">{roomId}</span></h2>
       
-      <div className="settings-box" style={{minWidth:'400px'}}>
-        <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+      <div className="settings-box waiting-room-box">
+        <div className="player-list-header">
             <h3>Spieler ({state.players.length}/4):</h3>
             {state.players.length < 4 && (
-                <button className="menu-button small" onClick={addBotMultiplayer} style={{padding:'8px 15px', fontSize:'14px'}}>+ Bot</button>
+                <button className="menu-button small add-bot-btn" onClick={addBotMultiplayer}>+ Bot</button>
             )}
         </div>
-        <ul style={{listStyle:'none', padding:0, fontSize:'20px'}}>
+        <ul className="player-list">
             {state.players.map((p, idx) => (
-                <li key={idx} style={{padding:'5px', borderBottom:'1px solid #444', color: p.socketId === playerId ? '#ffeb3b' : 'white'}}>
+                <li key={idx} className={`player-item ${p.socketId === playerId ? 'current-player' : ''}`}>
                     {p.name} {p.socketId === playerId && '(Du)'} {p.isBot && '(Bot)'}
                 </li>
             ))}
         </ul>
         
-        <div className="menu-content" style={{marginTop:'30px'}}>
+        <div className="menu-content waiting-room-actions">
             <button className="menu-button" onClick={startGameMultiplayer}>Spiel Starten</button>
             {state.players.length < 4 && (
-                <div style={{opacity:0.7, padding: '10px', fontSize: '14px'}}>Fehlende Spieler werden beim Start durch Bots ersetzt.</div>
+                <div className="bot-info-text">Fehlende Spieler werden beim Start durch Bots ersetzt.</div>
             )}
-            <button className="menu-button" onClick={goToMainMenu} style={{marginTop:'20px', background:'#d32f2f'}}>Verlassen</button>
+            <button className="menu-button leave-room-btn" onClick={goToMainMenu}>Verlassen</button>
         </div>
       </div>
     </div>

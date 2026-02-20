@@ -28,7 +28,7 @@ Das Projekt kann mit einem einzigen Befehl installiert und gestartet werden. Die
 
 ```bash
 git clone https://github.com/MokkaMS/doko-online.git
-cd doppelkopf-game
+cd doko-online
 ```
 
 ### 2. Spiel starten

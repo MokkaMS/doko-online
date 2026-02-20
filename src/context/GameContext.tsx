@@ -106,6 +106,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         socket.emit('play_card', { roomId, card });
         return;
     }
+    if (state.phase !== 'Playing') return;
     if (isCleaning) return;
     setState(prevState => {
       const currentPlayerIndex = prevState.currentPlayerIndex;

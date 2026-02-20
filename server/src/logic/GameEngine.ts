@@ -48,13 +48,53 @@ export class GameEngine {
     return this.determineTeams(newState);
   }
 
-  static determineFinalGameType(bids: Record<string, string>): GameType {
-    const soloTypes = ['DamenSolo', 'BubenSolo', 'FarbenSolo', 'Fleischlos'];
-    for (const [_, bid] of Object.entries(bids)) {
-        if (soloTypes.includes(bid)) return bid as GameType;
+  static determineFinalGameType(bids: Record<string, string>, playerIdsInOrder: string[]): { gameType: GameType, trumpSuit: Suit | null, soloPlayerId: string | null } {
+    const priorityOrder = [
+      GameType.FarbenSolo,
+      GameType.DamenSolo,
+      GameType.BubenSolo,
+      GameType.Fleischlos,
+      GameType.Hochzeit,
+      GameType.Normal
+    ];
+
+    const parsedBids = Object.entries(bids).map(([pid, rawBid]) => {
+        let type = GameType.Normal;
+        let trump: Suit | null = null;
+
+        if (rawBid.startsWith('FarbenSolo')) {
+            type = GameType.FarbenSolo;
+            const parts = rawBid.split('_');
+            if (parts.length > 1) trump = parts[1] as Suit;
+        } else if (rawBid === 'Fleischlos') {
+            type = GameType.Fleischlos;
+        } else if (rawBid === 'DamenSolo') {
+            type = GameType.DamenSolo;
+        } else if (rawBid === 'BubenSolo') {
+            type = GameType.BubenSolo;
+        } else if (rawBid === 'Hochzeit') {
+            type = GameType.Hochzeit;
+        }
+
+        return { pid, type, trump };
+    });
+
+    for (const targetType of priorityOrder) {
+        if (targetType === GameType.Normal) continue;
+
+        const bidders = parsedBids.filter(b => b.type === targetType);
+
+        if (bidders.length > 0) {
+            // Sort by position in playerIdsInOrder (priority to earlier players)
+            const winner = bidders.sort((a, b) => {
+                return playerIdsInOrder.indexOf(a.pid) - playerIdsInOrder.indexOf(b.pid);
+            })[0];
+
+            return { gameType: winner.type, trumpSuit: winner.trump, soloPlayerId: winner.pid };
+        }
     }
-    if (Object.values(bids).includes('Hochzeit')) return GameType.Hochzeit;
-    return GameType.Normal;
+
+    return { gameType: GameType.Normal, trumpSuit: null, soloPlayerId: null };
   }
 
   static determineTeams(state: GameState): GameState {
@@ -178,9 +218,6 @@ export class GameEngine {
 
     // 3. Karlchen
     if (settings.karlchen && isLastTrick) {
-        // Check winning card
-        // Winner is winnerIndex (absolute).
-        // Card index in trick: (winnerIndex - starterIndex + 4) % 4
         const cardIndex = (winnerIndex - starterIndex + 4) % 4;
         const winningCard = trick[cardIndex];
 
@@ -284,13 +321,49 @@ export class GameEngine {
         netScore = kontraGamePoints - reGamePoints;
     }
 
+    const isSolo = [GameType.DamenSolo, GameType.BubenSolo, GameType.FarbenSolo, GameType.Fleischlos].includes(state.gameType);
+
     // Update Tournament Points
     newState.players = newState.players.map(p => {
-        if (p.team === winner) {
-            return { ...p, tournamentPoints: p.tournamentPoints + netScore };
+        let pointsChange = 0;
+
+        if (isSolo) {
+            // Solo: Soloist (Re) gets 3x, Opponents (Kontra) get 1x.
+            // Signs depend on winner.
+
+            if (p.team === winner) {
+                 // Member of winning team
+                 if (p.team === 'Re') {
+                     // Soloist wins
+                     pointsChange = netScore * 3;
+                 } else {
+                     // Kontra wins (against Soloist)
+                     pointsChange = netScore;
+                 }
+            } else {
+                 // Member of losing team
+                 if (p.team === 'Re') {
+                     // Soloist lost
+                     // netScore is positive points for winner (Kontra).
+                     // Soloist loses netScore * 3
+                     pointsChange = -netScore * 3;
+                 } else {
+                     // Opponent lost (against Soloist)
+                     // netScore is positive points for winner (Re).
+                     // Opponent loses netScore
+                     pointsChange = -netScore;
+                 }
+            }
         } else {
-            return { ...p, tournamentPoints: p.tournamentPoints - netScore };
+             // Normal Scoring
+             if (p.team === winner) {
+                 pointsChange = netScore;
+             } else {
+                 pointsChange = -netScore;
+             }
         }
+
+        return { ...p, tournamentPoints: p.tournamentPoints + pointsChange };
     });
 
     // 8. Store Result

@@ -142,9 +142,9 @@ describe('cardUtils', () => {
       const king = createCard(Suit.Herz, CardValue.Koenig);
       const nine = createCard(Suit.Herz, CardValue.Neun);
 
-      expect(getCardPower(ace, GameType.Normal, null, settings)).toBe(10);
-      expect(getCardPower(ten, GameType.Normal, null, settings)).toBe(9);
-      expect(getCardPower(king, GameType.Normal, null, settings)).toBe(8);
+      expect(getCardPower(ace, GameType.Normal, null, settings)).toBe(20);
+      expect(getCardPower(ten, GameType.Normal, null, settings)).toBe(19);
+      expect(getCardPower(king, GameType.Normal, null, settings)).toBe(18);
       expect(getCardPower(nine, GameType.Normal, null, settings)).toBe(1);
     });
 

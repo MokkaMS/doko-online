@@ -51,10 +51,10 @@ const rooms: Record<string, Room> = Object.create(null);
 const disconnectTimeouts = new Map<string, NodeJS.Timeout>();
 
 const MAX_ROOMS = 100;
-const CREATE_ROOM_RATE_LIMIT = 30000; // 30 seconds
+const CREATE_ROOM_RATE_LIMIT = 2000; // 2 seconds
 const BOT_TURN_DELAY_MS = 1000;
 const BOT_BID_DELAY_MS = 500;
-const TRICK_EVALUATION_DELAY_MS = 1500;
+const TRICK_EVALUATION_DELAY_MS = 3000;
 const lastRoomCreation: Map<string, number> = new Map();
 const lastPlayerActionTime: Map<string, number> = new Map();
 
@@ -183,11 +183,16 @@ const executePlayCard = (roomId: string, playerId: string, card: Card) => {
   state.currentTrick = newTrick;
   state.currentPlayerIndex = (currentPlayerIndex + 1) % 4;
 
+  if (newTrick.length === 4) {
+      // Determine winner immediately for animation
+      state.trickWinnerIndex = GameEngine.evaluateTrick(state.currentTrick, state.trickStarterIndex, state.gameType, state.trumpSuit, room.settings);
+  }
+
   emitToRoom(roomId, 'game_state_update', state);
 
   if (newTrick.length === 4) {
     setTimeout(() => {
-      const winnerIndex = GameEngine.evaluateTrick(state.currentTrick, state.trickStarterIndex, state.gameType, state.trumpSuit, room.settings);
+      const winnerIndex = state.trickWinnerIndex !== null ? state.trickWinnerIndex : GameEngine.evaluateTrick(state.currentTrick, state.trickStarterIndex, state.gameType, state.trumpSuit, room.settings);
       const trickPoints = GameEngine.calculateTrickPoints(state.currentTrick);
 
       const winner = state.players[winnerIndex];
@@ -222,6 +227,7 @@ const executePlayCard = (roomId: string, playerId: string, card: Card) => {
       state.specialPoints.kontra.push(...special.kontra);
 
       state.currentTrick = [];
+      state.trickWinnerIndex = null;
       state.currentPlayerIndex = winnerIndex;
       state.trickStarterIndex = winnerIndex;
 

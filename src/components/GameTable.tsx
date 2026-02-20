@@ -125,8 +125,9 @@ export const GameTable: React.FC = () => {
           {state.currentTrick.map((card, i) => {
              const playerIdx = (state.trickStarterIndex + i) % 4;
              if (!state.players[playerIdx]) return null;
+             const animationClass = (state.trickWinnerIndex !== null && state.currentTrick.length === 4) ? `move-to-player-${state.trickWinnerIndex}` : '';
              return (
-               <div key={card.id} className={`trick-card-wrapper tcc-${playerIdx}`}>
+               <div key={card.id} className={`trick-card-wrapper tcc-${playerIdx} ${animationClass}`}>
                  <div className="trick-card-label">{state.players[playerIdx].name}</div>
                  <CardComponent card={card} className="trick-card" />
                </div>
@@ -155,17 +156,27 @@ export const GameTable: React.FC = () => {
           <h2>SPIEL BEENDET</h2>
           <div className="scoring-results">
             <div className="winner-banner">
-                {state.lastGameResult.winner === 'Re' ? 'TEAM RE GEWINNT!' : 'TEAM KONTRA GEWINNT!'}
+                {state.lastGameResult.winner === humanPlayer.team ? 'DU HAST GEWONNEN!' : 'DU HAST VERLOREN!'}
             </div>
             <div className="score-details">
                 <div className="team-score-column">
                     <h3>Re ({state.lastGameResult.reAugen} Augen)</h3>
+                    <div style={{ marginBottom: '10px', borderBottom: '1px solid #aaa', paddingBottom: '5px' }}>
+                        {state.players.filter(p => p.team === 'Re').map(p => (
+                             <div key={p.id} style={{fontSize: '0.9em'}}>{p.name}: {p.points}</div>
+                        ))}
+                    </div>
                     <ul>
                         {state.lastGameResult.details.re.map((d, i) => <li key={i}>+1 {d}</li>)}
                     </ul>
                 </div>
                 <div className="team-score-column">
                     <h3>Kontra ({state.lastGameResult.kontraAugen} Augen)</h3>
+                    <div style={{ marginBottom: '10px', borderBottom: '1px solid #aaa', paddingBottom: '5px' }}>
+                        {state.players.filter(p => p.team === 'Kontra').map(p => (
+                             <div key={p.id} style={{fontSize: '0.9em'}}>{p.name}: {p.points}</div>
+                        ))}
+                    </div>
                     <ul>
                         {state.lastGameResult.details.kontra.map((d, i) => <li key={i}>+1 {d}</li>)}
                     </ul>

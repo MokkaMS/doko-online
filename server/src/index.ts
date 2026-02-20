@@ -78,6 +78,7 @@ const executePlayCard = (roomId: string, playerId: string, card: Card) => {
   if (!room || !room.gameState) return;
 
   const state = room.gameState;
+  if (state.phase !== 'Playing') return;
   const player = state.players.find(p => p.id === playerId);
   if (!player) return;
 

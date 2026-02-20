@@ -40,6 +40,7 @@ body { margin: 0; padding: 0; background-color: #0d4d1a; color: white; font-fami
 .card { width: 95px; height: 140px; background: white; border-radius: 10px; border: 1px solid #999; display: flex; flex-direction: column; justify-content: space-between; padding: 8px; color: black; position: relative; background: linear-gradient(135deg, #fff 0%, #eee 100%); box-shadow: 2px 2px 8px rgba(0,0,0,0.4); }
 .card.red { color: #d32f2f; }
 .card.black { color: #222; }
+.card.disabled { filter: grayscale(100%); opacity: 0.7; cursor: not-allowed; pointer-events: none; }
 
 .card-corner { font-size: 18px; font-weight: bold; line-height: 1; }
 .card-corner.bottom { align-self: flex-end; transform: rotate(180deg); }
@@ -145,4 +146,3 @@ body { margin: 0; padding: 0; background-color: #0d4d1a; color: white; font-fami
   background: #388e3c;
   transform: scale(1.05);
 }
-

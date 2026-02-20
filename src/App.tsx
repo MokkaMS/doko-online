@@ -10,15 +10,15 @@ import { SettingsScreen } from './components/SettingsScreen';
 const suitSymbols: Record<Suit, string> = { [Suit.Kreuz]: '♣', [Suit.Pik]: '♠', [Suit.Herz]: '♥', [Suit.Karo]: '♦' };
 const valueSymbols: Record<CardValue, string> = { [CardValue.Ass]: 'A', [CardValue.Zehn]: '10', [CardValue.Koenig]: 'K', [CardValue.Dame]: 'D', [CardValue.Bube]: 'B', [CardValue.Neun]: '9' };
 
-const CardComponent = memo<{ card: Card; onClick?: (card: Card) => void; className?: string }>(({ card, onClick, className }) => {
+const CardComponent = memo<{ card: Card; onClick?: (card: Card) => void; className?: string; disabled?: boolean }>(({ card, onClick, className, disabled }) => {
   const isRed = card.suit === Suit.Herz || card.suit === Suit.Karo;
   const handleClick = () => {
-    if (onClick) {
+    if (onClick && !disabled) {
       onClick(card);
     }
   };
   return (
-    <div className={`card ${isRed ? 'red' : 'black'} ${className || ''}`} onClick={handleClick}>
+    <div className={`card ${isRed ? 'red' : 'black'} ${className || ''} ${disabled ? 'disabled' : ''}`} onClick={handleClick}>
       <div className="card-corner top">{valueSymbols[card.value]}</div>
       <div className="card-center">{suitSymbols[card.suit]}</div>
       <div className="card-corner bottom">{valueSymbols[card.value]}</div>
@@ -154,7 +154,12 @@ const App: React.FC = () => {
 
       <div className="hand">
         {sortedHand.map(card => (
-          <CardComponent key={card.id} card={card} onClick={handlePlayCard}/>
+          <CardComponent
+            key={card.id}
+            card={card}
+            onClick={handlePlayCard}
+            disabled={state.phase !== 'Playing'}
+          />
         ))}
       </div>
 

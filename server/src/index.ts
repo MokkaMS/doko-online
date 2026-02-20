@@ -286,6 +286,17 @@ io.on('connection', (socket: Socket) => {
     const room = rooms[roomId];
     if (!room || !room.gameState) return;
     const state = room.gameState;
+
+    const currentPlayer = state.players[state.currentPlayerIndex];
+    if (currentPlayer.id !== playerId) {
+      console.warn(`Player ${playerId} attempted to bid out of turn. Expected: ${currentPlayer.id}`);
+      const playerSocket = room.players.find(p => p.id === playerId);
+      if (playerSocket?.socketId) {
+        io.to(playerSocket.socketId).emit('error', 'It is not your turn to bid.');
+      }
+      return;
+    }
+
     state.announcements[playerId] = [bid];
 
     if (Object.keys(state.announcements).length === 4) {

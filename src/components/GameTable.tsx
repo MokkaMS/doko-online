@@ -63,7 +63,10 @@ export const GameTable: React.FC = () => {
           return (
             <div key={p.id} className={`player-info ${posClass}`}>
               <div className="player-header">
-                <span className="player-name">{p.name} {p.id === state.players[state.dealerIndex]?.id && '(G)'}</span>
+                <span className="player-name">
+                  {p.name} {p.id === state.players[state.dealerIndex]?.id && '(G)'}
+                  {p.connected === false && <span style={{color: '#ff6b6b', marginLeft: '5px', fontSize: '0.8em'}}>(Disc)</span>}
+                </span>
                 {state.currentPlayerIndex === idx && <span className="current-turn-indicator">★</span>}
               </div>
               <span className="player-points">{p.points} Pkt</span>

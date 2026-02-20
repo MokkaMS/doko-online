@@ -3,6 +3,7 @@ import { io, Socket } from 'socket.io-client';
 import { Card, GameState, Player, GameSettings, GameType, Suit, CardValue } from '../logic/types';
 import { GameEngine } from '../logic/GameEngine';
 import { Bot } from '../logic/Bot';
+import { getStoredPlayerId } from '../utils/storage';
 
 const socket: Socket = io({ autoConnect: false });
 
@@ -43,7 +44,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [state, setState] = useState<GameState>(() => GameEngine.createInitialState(['Du', 'Bot 1', 'Bot 2', 'Bot 3'], defaultSettings));
   const [isCleaning, setIsCleaning] = useState(false);
   const [roomId, setRoomId] = useState<string | null>(null);
-  const [playerId, setPlayerId] = useState<string | null>(null);
+  const [playerId] = useState<string>(() => getStoredPlayerId());
 
   useEffect(() => {
     socket.connect();
@@ -303,13 +304,11 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const joinGame = (rid: string, pname: string) => {
-      setPlayerId(socket.id || null); // Socket ID might not be ready
-      socket.emit('join_room', { roomId: rid, playerName: pname });
+      socket.emit('join_room', { roomId: rid, playerName: pname, playerId });
   };
 
   const createGame = (pname: string) => {
-      setPlayerId(socket.id || null);
-      socket.emit('create_room', pname);
+      socket.emit('create_room', { playerName: pname, playerId });
   };
 
   const startGameMultiplayer = () => {

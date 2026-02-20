@@ -42,6 +42,8 @@ export interface Player {
   isRevealed?: boolean;
   points: number;
   tricks: Card[][];
+  connected?: boolean;
+  disconnectTime?: number;
 }
 
 export interface GameSettings {

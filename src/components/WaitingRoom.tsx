@@ -19,8 +19,9 @@ export const WaitingRoom: React.FC = () => {
         </div>
         <ul className="player-list">
             {state.players.map((p, idx) => (
-                <li key={idx} className={`player-item ${p.socketId === playerId ? 'current-player' : ''}`}>
-                    {p.name} {p.socketId === playerId && '(Du)'} {p.isBot && '(Bot)'}
+                <li key={idx} className={`player-item ${p.id === playerId ? 'current-player' : ''}`}>
+                    {p.name} {p.id === playerId && '(Du)'} {p.isBot && '(Bot)'}
+                    {p.connected === false && <span style={{color: '#ff6b6b', marginLeft: '8px', fontSize: '0.9em'}}>(Getrennt)</span>}
                 </li>
             ))}
         </ul>

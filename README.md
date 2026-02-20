@@ -44,6 +44,30 @@ Dieser Vorgang kann beim ersten Mal einige Minuten dauern, da sowohl Frontend- a
 Sobald der Prozess abgeschlossen ist, ist das Spiel unter folgender Adresse erreichbar:
 `http://localhost:5173`
 
+## Installation mit Docker
+
+Alternativ zur manuellen Installation können Sie das Spiel auch in einem Docker-Container ausführen.
+
+### Voraussetzungen
+
+- [Docker](https://www.docker.com/) und [Docker Compose](https://docs.docker.com/compose/) müssen installiert sein.
+
+### Starten
+
+Führen Sie im Hauptverzeichnis folgenden Befehl aus:
+
+```bash
+docker-compose up --build -d
+```
+
+Das Spiel ist anschließend unter `http://localhost:5173` erreichbar.
+
+Um den Container zu stoppen, verwenden Sie:
+
+```bash
+docker-compose down
+```
+
 ## Technologien
 
 - **Frontend**: [React 19](https://react.dev/), [Vite](https://vitejs.dev/), TypeScript

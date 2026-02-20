@@ -7,12 +7,19 @@ import { CardComponent } from './CardComponent';
 export const GameTable: React.FC = () => {
   const { state, playCard, submitBid, announceReKontra, settings, goToMainMenu, playerId, startNewGame } = useGame();
   const [showFarbenSoloSelection, setShowFarbenSoloSelection] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  // Reset processing state when game state updates
+  React.useEffect(() => {
+    setIsProcessing(false);
+  }, [state]);
 
   // In Multiplayer, find "me". In Singleplayer, it is index 0.
   const humanPlayer = (playerId ? state.players.find(p => p.id === playerId || p.socketId === playerId) : state.players[0]) || state.players[0];
 
   const handlePlayCard = useCallback((card: Card) => {
     if (humanPlayer) {
+      setIsProcessing(true);
       playCard(humanPlayer.id, card);
     }
   }, [playCard, humanPlayer?.id]);
@@ -134,7 +141,7 @@ export const GameTable: React.FC = () => {
             key={card.id}
             card={card}
             onClick={handlePlayCard}
-            disabled={state.phase !== 'Playing'}
+            disabled={state.phase !== 'Playing' || isProcessing || state.currentTrick.length >= 4}
           />
         ))}
       </div>

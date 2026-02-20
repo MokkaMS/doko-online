@@ -56,6 +56,7 @@ const BOT_TURN_DELAY_MS = 1000;
 const BOT_BID_DELAY_MS = 500;
 const TRICK_EVALUATION_DELAY_MS = 1500;
 const lastRoomCreation: Map<string, number> = new Map();
+const lastPlayerActionTime: Map<string, number> = new Map();
 
 // Helper to generate room ID
 const generateRoomId = () => {
@@ -136,6 +137,20 @@ const executePlayCard = (roomId: string, playerId: string, card: Card) => {
 
   const state = room.gameState;
   if (state.phase !== 'Playing') return;
+
+  // Prevent playing into a full trick (waiting for evaluation)
+  if (state.currentTrick.length >= 4) {
+    return;
+  }
+
+  // Debounce player actions
+  const now = Date.now();
+  const lastTime = lastPlayerActionTime.get(playerId);
+  if (lastTime && (now - lastTime) < 500) {
+    return;
+  }
+  lastPlayerActionTime.set(playerId, now);
+
   const player = state.players.find(p => p.id === playerId);
   if (!player) return;
 

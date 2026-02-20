@@ -46,8 +46,9 @@ export const shuffle = (deck: Card[]): Card[] => {
 };
 
 export const isTrump = (card: Card, gameType: GameType, trumpSuit: Suit | null, settings: GameSettings): boolean => {
-  // Dulle ist immer Trumpf (außer bei bestimmten Solo-Varianten, hier vereinfacht)
-  if (card.value === CardValue.Zehn && card.suit === Suit.Herz && settings.dullenAlsHoechste) {
+  // Dulle ist immer Trumpf (außer bei bestimmten Solo-Varianten)
+  const isSolo = [GameType.DamenSolo, GameType.BubenSolo, GameType.FarbenSolo, GameType.Fleischlos].includes(gameType);
+  if (card.value === CardValue.Zehn && card.suit === Suit.Herz && settings.dullenAlsHoechste && !isSolo) {
     return true;
   }
 
@@ -76,7 +77,8 @@ export const getCardPower = (card: Card, gameType: GameType, trumpSuit: Suit | n
     let power = 1000;
     
     // Dulle
-    if (card.value === CardValue.Zehn && card.suit === Suit.Herz && settings.dullenAlsHoechste) {
+    const isSolo = [GameType.DamenSolo, GameType.BubenSolo, GameType.FarbenSolo, GameType.Fleischlos].includes(gameType);
+    if (card.value === CardValue.Zehn && card.suit === Suit.Herz && settings.dullenAlsHoechste && !isSolo) {
       return power + 100;
     }
 

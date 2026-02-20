@@ -5,6 +5,7 @@ import cors from 'cors';
 import { GameEngine } from './logic/GameEngine';
 import { GameState, Card, GameSettings, Player, GameType, Suit, CardValue } from './logic/types';
 import { Bot } from './logic/Bot';
+import { validatePlayerName } from './utils/validation';
 
 const app = express();
 app.use(cors());
@@ -24,7 +25,7 @@ interface Room {
   settings: GameSettings;
 }
 
-const rooms: Record<string, Room> = {};
+const rooms: Record<string, Room> = Object.create(null);
 
 const MAX_ROOMS = 100;
 const CREATE_ROOM_RATE_LIMIT = 30000; // 30 seconds
@@ -80,11 +81,24 @@ const executePlayCard = (roomId: string, playerId: string, card: Card) => {
   const currentPlayer = state.players[currentPlayerIndex];
   if (currentPlayer.id !== playerId) return;
 
-  const newHand = currentPlayer.hand.filter(c => c.id !== card.id);
-  const newTrick = [...state.currentTrick, card];
+  // Security: Verify card exists in player's hand
+  const cardInHand = currentPlayer.hand.find(c => c.id === card.id);
+  if (!cardInHand) {
+    console.warn(`Player ${playerId} attempted to play a card not in hand: ${JSON.stringify(card)}`);
+    return;
+  }
+
+  // Security: Verify move is valid according to game rules
+  if (!GameEngine.isValidMove(cardInHand, currentPlayer, state.currentTrick, state.gameType, state.trumpSuit, room.settings)) {
+    console.warn(`Player ${playerId} attempted an invalid move: ${JSON.stringify(cardInHand)}`);
+    return;
+  }
+
+  const newHand = currentPlayer.hand.filter(c => c.id !== cardInHand.id);
+  const newTrick = [...state.currentTrick, cardInHand];
   
   // Reveal team if Kreuz-Dame is played
-  if (card.suit === Suit.Kreuz && card.value === CardValue.Dame) {
+  if (cardInHand.suit === Suit.Kreuz && cardInHand.value === CardValue.Dame) {
       player.isRevealed = true;
   }
 
@@ -174,7 +188,7 @@ io.on('connection', (socket: Socket) => {
     const roomId = generateRoomId();
     rooms[roomId] = {
       id: roomId,
-      players: [{ id: socket.id, name: playerName, socketId: socket.id, ready: true }],
+      players: [{ id: socket.id, name: playerName.trim(), socketId: socket.id, ready: true }],
       gameState: null,
       settings: { ...defaultSettings }
     };
@@ -183,13 +197,18 @@ io.on('connection', (socket: Socket) => {
   });
 
   socket.on('join_room', ({ roomId, playerName }: { roomId: string, playerName: string }) => {
+    const error = validatePlayerName(playerName);
+    if (error) {
+      socket.emit('error', error);
+      return;
+    }
     const room = rooms[roomId];
-    if (room) {
+    if (room && typeof room !== 'function') {
       if (room.players.length >= 4) {
         socket.emit('error', 'Room is full');
         return;
       }
-      room.players.push({ id: socket.id, name: playerName, socketId: socket.id, ready: true });
+      room.players.push({ id: socket.id, name: playerName.trim(), socketId: socket.id, ready: true });
       socket.join(roomId);
       io.to(roomId).emit('player_joined', room.players);
       socket.emit('joined_room', { roomId, players: room.players, settings: room.settings });

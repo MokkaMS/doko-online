@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { Card, Suit, CardValue } from '../logic/types';
 import { sortCards } from '../logic/cardUtils';
@@ -6,6 +6,7 @@ import { CardComponent } from './CardComponent';
 
 export const GameTable: React.FC = () => {
   const { state, playCard, submitBid, announceReKontra, settings, goToMainMenu, playerId, startNewGame } = useGame();
+  const [showFarbenSoloSelection, setShowFarbenSoloSelection] = useState(false);
 
   // In Multiplayer, find "me". In Singleplayer, it is index 0.
   const humanPlayer = (playerId ? state.players.find(p => p.id === playerId || p.socketId === playerId) : state.players[0]) || state.players[0];
@@ -15,6 +16,17 @@ export const GameTable: React.FC = () => {
       playCard(humanPlayer.id, card);
     }
   }, [playCard, humanPlayer?.id]);
+
+  const handleFarbenSoloClick = () => {
+      setShowFarbenSoloSelection(true);
+  };
+
+  const handleSuitSelect = (suit: Suit) => {
+      if (humanPlayer) {
+          submitBid(humanPlayer.id, `FarbenSolo_${suit}`);
+          setShowFarbenSoloSelection(false);
+      }
+  };
 
   const sortedHand = useMemo(() => {
     if (!humanPlayer?.hand) return [];
@@ -41,12 +53,27 @@ export const GameTable: React.FC = () => {
         {state.phase === 'Bidding' && state.currentPlayerIndex === state.players.findIndex(p => p.id === humanPlayer.id) && (
           <div className="bidding-area">
             <h3>Wähle deinen Vorbehalt:</h3>
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button onClick={() => submitBid(humanPlayer.id, 'Gesund')}>Gesund</button>
-              {hasBothReQueens && <button onClick={() => submitBid(humanPlayer.id, 'Hochzeit')}>Hochzeit</button>}
-              <button onClick={() => submitBid(humanPlayer.id, 'DamenSolo')}>Damen-Solo</button>
-              <button onClick={() => submitBid(humanPlayer.id, 'BubenSolo')}>Buben-Solo</button>
-            </div>
+            {!showFarbenSoloSelection ? (
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                  <button onClick={() => submitBid(humanPlayer.id, 'Gesund')}>Gesund</button>
+                  {hasBothReQueens && <button onClick={() => submitBid(humanPlayer.id, 'Hochzeit')}>Hochzeit</button>}
+                  <button onClick={() => submitBid(humanPlayer.id, 'DamenSolo')}>Damen-Solo</button>
+                  <button onClick={() => submitBid(humanPlayer.id, 'BubenSolo')}>Buben-Solo</button>
+                  <button onClick={handleFarbenSoloClick}>Farben-Solo</button>
+                  <button onClick={() => submitBid(humanPlayer.id, 'Fleischlos')}>Fleischlos</button>
+                </div>
+            ) : (
+                <div className="suit-selection">
+                    <h4>Wähle Solo-Farbe:</h4>
+                    <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+                        <button onClick={() => handleSuitSelect(Suit.Kreuz)}>Kreuz ♣</button>
+                        <button onClick={() => handleSuitSelect(Suit.Pik)}>Pik ♠</button>
+                        <button onClick={() => handleSuitSelect(Suit.Herz)}>Herz ♥</button>
+                        <button onClick={() => handleSuitSelect(Suit.Karo)}>Karo ♦</button>
+                        <button onClick={() => setShowFarbenSoloSelection(false)} style={{backgroundColor: '#666'}}>Zurück</button>
+                    </div>
+                </div>
+            )}
           </div>
         )}
         {state.phase === 'Bidding' && state.currentPlayerIndex !== state.players.findIndex(p => p.id === humanPlayer.id) && (

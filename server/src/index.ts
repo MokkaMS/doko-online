@@ -439,14 +439,29 @@ io.on('connection', (socket: Socket) => {
     if (Object.keys(state.announcements).length === 4) {
         const bidsMap: Record<string, string> = {};
         for(const pid in state.announcements) bidsMap[pid] = state.announcements[pid][0];
-        const finalType = GameEngine.determineFinalGameType(bidsMap);
+
+        // Determine player order starting from Forehand (Dealer + 1)
+        const playerIdsInOrder = [];
+        let pIndex = (state.dealerIndex + 1) % 4;
+        for(let i=0; i<4; i++) {
+            playerIdsInOrder.push(state.players[pIndex].id);
+            pIndex = (pIndex + 1) % 4;
+        }
+
+        const { gameType: finalType, trumpSuit, soloPlayerId } = GameEngine.determineFinalGameType(bidsMap, playerIdsInOrder);
         state.gameType = finalType;
+        state.trumpSuit = trumpSuit;
+
         if (['DamenSolo', 'BubenSolo', 'FarbenSolo', 'Fleischlos'].includes(finalType)) {
-             const soloPid = Object.keys(bidsMap).find(pid => bidsMap[pid] === finalType);
-             state.players.forEach(p => { 
-                 p.team = p.id === soloPid ? 'Re' : 'Kontra';
-                 p.isRevealed = true; // Everyone knows teams in a Solo
-             });
+             // Use soloPlayerId to set teams
+             if (soloPlayerId) {
+                 state.rePlayerIds = [soloPlayerId];
+                 state.kontraPlayerIds = state.players.filter(p => p.id !== soloPlayerId).map(p => p.id);
+                 state.players.forEach(p => {
+                     p.team = p.id === soloPlayerId ? 'Re' : 'Kontra';
+                     p.isRevealed = true; // Everyone knows teams in a Solo
+                 });
+             }
         } else {
              const tempState = GameEngine.determineTeams(state);
              state.rePlayerIds = tempState.rePlayerIds;

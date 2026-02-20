@@ -46,8 +46,17 @@ export const shuffle = (deck: Card[]): Card[] => {
 };
 
 export const isTrump = (card: Card, gameType: GameType, trumpSuit: Suit | null, settings: GameSettings): boolean => {
-  // Dulle ist immer Trumpf (außer bei bestimmten Solo-Varianten)
-  const isSolo = [GameType.DamenSolo, GameType.BubenSolo, GameType.FarbenSolo, GameType.Fleischlos].includes(gameType);
+  if (gameType === GameType.Fleischlos) return false;
+
+  // Dulle logic for FarbenSolo (Always Trump)
+  if (gameType === GameType.FarbenSolo && card.value === CardValue.Zehn && card.suit === Suit.Herz) {
+      return true;
+  }
+
+  // Check for Solo types that have standard trumps (Damen/Buben/Farben)
+  const isSolo = [GameType.DamenSolo, GameType.BubenSolo, GameType.FarbenSolo].includes(gameType);
+
+  // Dulle logic for Normal/Hochzeit (Dependent on settings)
   if (card.value === CardValue.Zehn && card.suit === Suit.Herz && settings.dullenAlsHoechste && !isSolo) {
     return true;
   }
@@ -62,7 +71,7 @@ export const isTrump = (card: Card, gameType: GameType, trumpSuit: Suit | null, 
 
   if (gameType === GameType.DamenSolo) return card.value === CardValue.Dame;
   if (gameType === GameType.BubenSolo) return card.value === CardValue.Bube;
-  if (gameType === GameType.Fleischlos) return false;
+
   if (gameType === GameType.FarbenSolo) {
     return card.suit === trumpSuit || card.value === CardValue.Dame || card.value === CardValue.Bube;
   }
@@ -76,10 +85,15 @@ export const getCardPower = (card: Card, gameType: GameType, trumpSuit: Suit | n
   if (trump) {
     let power = 1000;
     
-    // Dulle
-    const isSolo = [GameType.DamenSolo, GameType.BubenSolo, GameType.FarbenSolo, GameType.Fleischlos].includes(gameType);
-    if (card.value === CardValue.Zehn && card.suit === Suit.Herz && settings.dullenAlsHoechste && !isSolo) {
-      return power + 100;
+    // Dulle:
+    // - In FarbenSolo always highest.
+    // - In Normal/Hochzeit if dullenAlsHoechste is true.
+    const isFarbenSoloHerz10 = gameType === GameType.FarbenSolo && card.value === CardValue.Zehn && card.suit === Suit.Herz;
+    const isNormalDulle = [GameType.Normal, GameType.Hochzeit].includes(gameType) &&
+                          card.value === CardValue.Zehn && card.suit === Suit.Herz && settings.dullenAlsHoechste;
+
+    if (isFarbenSoloHerz10 || isNormalDulle) {
+      return power + 200;
     }
 
     // Damen
@@ -112,11 +126,14 @@ export const getCardPower = (card: Card, gameType: GameType, trumpSuit: Suit | n
     
     return power;
   } else {
-    // Fehlfarben
+    // Fehlfarben (or Fleischlos)
     let power = 0;
-    if (card.value === CardValue.Ass) power = 10;
-    if (card.value === CardValue.Zehn) power = 9;
-    if (card.value === CardValue.Koenig) power = 8;
+
+    if (card.value === CardValue.Ass) power = 20;
+    if (card.value === CardValue.Zehn) power = 19;
+    if (card.value === CardValue.Koenig) power = 18;
+    if (card.value === CardValue.Dame) power = 17; // Relevant for Fleischlos
+    if (card.value === CardValue.Bube) power = 16; // Relevant for Fleischlos
     if (card.value === CardValue.Neun) power = 1;
     
     return power;

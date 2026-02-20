@@ -53,7 +53,7 @@ body { margin: 0; padding: 0; background-color: #0d4d1a; color: white; font-fami
 
 /* Trick Cards on Table */
 .trick { width: 100%; height: 100%; position: relative; pointer-events: none; }
-.trick-card-wrapper { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 5px; z-index: 20; }
+.trick-card-wrapper { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 5px; z-index: 20; transition: all 1.5s ease-in-out; }
 .trick-card { width: 85px; height: 125px; transform: none !important; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
 .trick-card .card-center { font-size: 32px; }
 
@@ -61,6 +61,35 @@ body { margin: 0; padding: 0; background-color: #0d4d1a; color: white; font-fami
 .tcc-1 { left: 160px; top: 50%; transform: translateY(-50%); animation: p1In 0.4s ease-out; }
 .tcc-2 { top: 140px; left: 50%; transform: translateX(-50%); animation: p2In 0.4s ease-out; }
 .tcc-3 { right: 160px; top: 50%; transform: translateY(-50%); animation: p3In 0.4s ease-out; }
+
+/* Animation to Winner */
+.move-to-player-0 {
+  bottom: 20px !important;
+  left: 50% !important;
+  transform: translateX(-50%) scale(0.5) !important;
+  opacity: 0;
+}
+
+.move-to-player-1 {
+  left: -60px !important;
+  top: 50% !important;
+  transform: translateY(-50%) scale(0.5) !important;
+  opacity: 0;
+}
+
+.move-to-player-2 {
+  top: 20px !important;
+  left: 50% !important;
+  transform: translateX(-50%) scale(0.5) !important;
+  opacity: 0;
+}
+
+.move-to-player-3 {
+  right: -60px !important;
+  top: 50% !important;
+  transform: translateY(-50%) scale(0.5) !important;
+  opacity: 0;
+}
 
 @keyframes p0In { from { transform: translate(-50%, 200px); opacity: 0; } }
 @keyframes p1In { from { transform: translate(-200px, -50%); opacity: 0; } }

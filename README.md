@@ -22,7 +22,7 @@ Willkommen zu dieser webbasierten Implementierung des beliebten Kartenspiels **D
 
 Um das Projekt lokal auszuführen, benötigen Sie [Node.js](https://nodejs.org/) (Version 18 oder neuer empfohlen).
 
-Das Projekt besteht aus zwei Teilen: dem **Frontend** (React) und dem **Backend** (Node.js Server). Beide müssen gleichzeitig laufen.
+Das Projekt kann mit einem einzigen Befehl installiert und gestartet werden. Dieser Befehl installiert alle Abhängigkeiten, baut das Frontend und startet den Server, der das Spiel bereitstellt.
 
 ### 1. Repository klonen
 
@@ -31,26 +31,18 @@ git clone https://github.com/MokkaMS/doko-online.git
 cd doppelkopf-game
 ```
 
-### 2. Backend starten
+### 2. Spiel starten
 
-Der Server verwaltet die Spielzustände und Multiplayer-Verbindungen. Öffnen Sie ein Terminal und navigieren Sie in den `server`-Ordner:
+Führen Sie im Hauptverzeichnis folgenden Befehl aus:
 
 ```bash
-cd server
-npm install
 npm start
 ```
-Der Server läuft nun auf `http://localhost:3001`.
 
-### 3. Frontend starten
+Dieser Vorgang kann beim ersten Mal einige Minuten dauern, da sowohl Frontend- als auch Backend-Abhängigkeiten installiert und gebaut werden.
 
-Die Benutzeroberfläche wird mit Vite gestartet. Öffnen Sie ein **zweites, neues** Terminal im Hauptverzeichnis des Projekts:
-
-```bash
-npm install
-npm run dev
-```
-Das Frontend ist nun unter der im Terminal angezeigten Adresse erreichbar (meist `http://localhost:5173`). Öffnen Sie diese Adresse in Ihrem Browser.
+Sobald der Prozess abgeschlossen ist, ist das Spiel unter folgender Adresse erreichbar:
+`http://localhost:5173`
 
 ## Technologien
 
@@ -60,7 +52,6 @@ Das Frontend ist nun unter der im Terminal angezeigten Adresse erreichbar (meist
 
 ## Bekannte Probleme (Known Issues)
 
-- **Verbindung**: Die Server-Adresse ist im Code derzeit fest auf `http://localhost:3001` eingestellt (`src/context/GameContext.tsx`). Für einen Betrieb im Netzwerk oder Internet muss diese Adresse angepasst werden.
 - **UI-Positionierung**: Die Position der Spieler am Tisch ist statisch und passt sich bei sehr kleinen Bildschirmen (Mobile) möglicherweise nicht optimal an.
 - **Speicherung**: Es gibt keine Datenbankanbindung. Spielstände und Statistiken werden nur im Arbeitsspeicher gehalten und gehen verloren, wenn der Server neu gestartet wird.
 - **Bots**: Die Computergegner spielen nach einer einfachen Heuristik und können komplexe Spielsituationen nicht immer optimal lösen.

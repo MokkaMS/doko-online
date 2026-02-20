@@ -252,7 +252,31 @@ export class GameEngine {
         kontraDetails.push(sp);
     });
 
-    // 6. Net Calculation
+    // 6. Announcements
+    const reAnnounced = Object.values(state.reKontraAnnouncements).includes('Re');
+    const kontraAnnounced = Object.values(state.reKontraAnnouncements).includes('Kontra');
+
+    if (reAnnounced) {
+        if (winner === 'Re') {
+            reGamePoints += 1;
+            reDetails.push('Re angesagt');
+        } else {
+            kontraGamePoints += 1;
+            kontraDetails.push('Re verloren');
+        }
+    }
+
+    if (kontraAnnounced) {
+        if (winner === 'Kontra') {
+            kontraGamePoints += 1;
+            kontraDetails.push('Kontra angesagt');
+        } else {
+            reGamePoints += 1;
+            reDetails.push('Kontra verloren');
+        }
+    }
+
+    // 7. Net Calculation
     let netScore = 0;
     if (winner === 'Re') {
         netScore = reGamePoints - kontraGamePoints;
@@ -269,7 +293,7 @@ export class GameEngine {
         }
     });
 
-    // 7. Store Result
+    // 8. Store Result
     const result: ScoringResult = {
         winner,
         winningPoints: netScore,

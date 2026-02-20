@@ -494,10 +494,29 @@ io.on('connection', (socket: Socket) => {
        
        const player = room.players.find(p => p.socketId === socket.id);
        if (!player) return;
+       const gamePlayer = state.players.find(p => p.id === player.id);
+       if (!gamePlayer) return;
+
+       // 1. Validate Team
+       if (type === 'Re' && !state.rePlayerIds.includes(player.id)) {
+           socket.emit('error', 'You can only announce Re if you are on the Re team.');
+           return;
+       }
+       if (type === 'Kontra' && !state.kontraPlayerIds.includes(player.id)) {
+           socket.emit('error', 'You can only announce Kontra if you are on the Kontra team.');
+           return;
+       }
+
+       // 2. Validate Timing (Before playing 2nd card)
+       const initialHandSize = room.settings.mitNeunen ? 12 : 10;
+       const cardsPlayed = initialHandSize - gamePlayer.hand.length;
+       if (cardsPlayed >= 2) {
+           socket.emit('error', 'Announcements are only allowed before you play your second card.');
+           return;
+       }
 
        state.reKontraAnnouncements[player.id] = type;
-       const gamePlayer = state.players.find(p => p.id === player.id);
-       if (gamePlayer) gamePlayer.isRevealed = true;
+       gamePlayer.isRevealed = true;
        
        emitToRoom(roomId, 'game_state_update', state);
   });

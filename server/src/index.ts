@@ -27,6 +27,10 @@ interface Room {
 
 const rooms: Record<string, Room> = Object.create(null);
 
+const MAX_ROOMS = 100;
+const CREATE_ROOM_RATE_LIMIT = 30000; // 30 seconds
+const lastRoomCreation: Map<string, number> = new Map();
+
 // Helper to generate room ID
 const generateRoomId = () => {
   return Math.random().toString(36).substring(2, 6).toUpperCase();
@@ -152,11 +156,35 @@ io.on('connection', (socket: Socket) => {
   console.log('User connected:', socket.id);
 
   socket.on('create_room', (playerName: string) => {
-    const error = validatePlayerName(playerName);
-    if (error) {
-      socket.emit('error', error);
+    // 1. Check Global Limit
+    if (Object.keys(rooms).length >= MAX_ROOMS) {
+      socket.emit('error', 'Server is full (max 100 rooms)');
       return;
     }
+
+    // 2. Check Rate Limit
+    const lastTime = lastRoomCreation.get(socket.id);
+    const now = Date.now();
+    if (lastTime && (now - lastTime) < CREATE_ROOM_RATE_LIMIT) {
+      socket.emit('error', 'You are creating rooms too fast. Please wait.');
+      return;
+    }
+
+    // 3. Check if already in a room
+    let alreadyInRoom = false;
+    for (const rid in rooms) {
+      if (rooms[rid].players.some(p => p.socketId === socket.id)) {
+        alreadyInRoom = true;
+        break;
+      }
+    }
+    if (alreadyInRoom) {
+      socket.emit('error', 'You are already in a room.');
+      return;
+    }
+
+    lastRoomCreation.set(socket.id, now);
+
     const roomId = generateRoomId();
     rooms[roomId] = {
       id: roomId,
@@ -307,6 +335,8 @@ io.on('connection', (socket: Socket) => {
 
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
+    lastRoomCreation.delete(socket.id);
+
     // Remove player from room? 
     // Ideally yes, or mark as disconnected.
     for (const roomId in rooms) {

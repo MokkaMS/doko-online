@@ -4,7 +4,7 @@ import { Card, GameState, Player, GameSettings, GameType, Suit, CardValue } from
 import { GameEngine } from '../logic/GameEngine';
 import { Bot } from '../logic/Bot';
 
-const socket: Socket = io('http://localhost:3001', { autoConnect: false });
+const socket: Socket = io({ autoConnect: false });
 
 interface GameContextType {
   state: GameState;

@@ -50,6 +50,32 @@ const defaultSettings: GameSettings = {
   soloPrioritaet: true,
 };
 
+// Helper to sanitize state for a specific player
+const sanitizeState = (state: GameState, playerId: string): GameState => {
+  const newState = { ...state };
+  newState.players = state.players.map(p => {
+    if (p.id === playerId) {
+      return p;
+    } else {
+      return { ...p, hand: [] };
+    }
+  });
+  return newState;
+};
+
+// Helper to emit state to room
+const emitToRoom = (roomId: string, event: string, state: GameState) => {
+  const room = rooms[roomId];
+  if (!room) return;
+
+  room.players.forEach(p => {
+    if (!p.isBot && p.socketId) {
+      const sanitized = sanitizeState(state, p.id);
+      io.to(p.socketId).emit(event, sanitized);
+    }
+  });
+};
+
 // Helper to handle bot turns
 const handleBotTurns = (roomId: string) => {
   const room = rooms[roomId];
@@ -111,7 +137,7 @@ const executePlayCard = (roomId: string, playerId: string, card: Card) => {
   state.currentTrick = newTrick;
   state.currentPlayerIndex = (currentPlayerIndex + 1) % 4;
 
-  io.to(roomId).emit('game_state_update', state);
+  emitToRoom(roomId, 'game_state_update', state);
 
   if (newTrick.length === 4) {
     setTimeout(() => {
@@ -146,7 +172,7 @@ const executePlayCard = (roomId: string, playerId: string, card: Card) => {
         state.players = finalPlayers;
       }
 
-      io.to(roomId).emit('game_state_update', state);
+      emitToRoom(roomId, 'game_state_update', state);
       
       if (state.phase === 'Playing') {
         handleBotTurns(roomId);
@@ -252,7 +278,7 @@ io.on('connection', (socket: Socket) => {
 
       const stateWithTeams = GameEngine.determineTeams(initialState);
       room.gameState = stateWithTeams;
-      io.to(roomId).emit('game_started', stateWithTeams);
+      emitToRoom(roomId, 'game_started', stateWithTeams);
       
       // If first player is a bot, start its turn
       if (initialState.phase === 'Bidding') {
@@ -319,11 +345,11 @@ io.on('connection', (socket: Socket) => {
         state.phase = 'Playing';
         state.currentPlayerIndex = (state.dealerIndex + 1) % 4;
         state.trickStarterIndex = state.currentPlayerIndex;
-        io.to(roomId).emit('game_state_update', state);
+        emitToRoom(roomId, 'game_state_update', state);
         handleBotTurns(roomId);
     } else {
         state.currentPlayerIndex = (state.currentPlayerIndex + 1) % 4;
-        io.to(roomId).emit('game_state_update', state);
+        emitToRoom(roomId, 'game_state_update', state);
         if (state.phase === 'Bidding') handleBotBid(roomId);
     }
   };
@@ -346,7 +372,7 @@ io.on('connection', (socket: Socket) => {
        const player = state.players.find(p => p.id === socket.id);
        if (player) player.isRevealed = true;
        
-       io.to(roomId).emit('game_state_update', state);
+       emitToRoom(roomId, 'game_state_update', state);
   });
 
   socket.on('disconnect', () => {

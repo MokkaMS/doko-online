@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo, memo } from 'react';
 import './App.css';
 import { useGame } from './context/GameContext';
 import { Card, Suit, CardValue } from './logic/types';
@@ -10,16 +10,21 @@ import { SettingsScreen } from './components/SettingsScreen';
 const suitSymbols: Record<Suit, string> = { [Suit.Kreuz]: '♣', [Suit.Pik]: '♠', [Suit.Herz]: '♥', [Suit.Karo]: '♦' };
 const valueSymbols: Record<CardValue, string> = { [CardValue.Ass]: 'A', [CardValue.Zehn]: '10', [CardValue.Koenig]: 'K', [CardValue.Dame]: 'D', [CardValue.Bube]: 'B', [CardValue.Neun]: '9' };
 
-const CardComponent: React.FC<{ card: Card; onClick?: () => void; className?: string }> = ({ card, onClick, className }) => {
+const CardComponent = memo<{ card: Card; onClick?: (card: Card) => void; className?: string }>(({ card, onClick, className }) => {
   const isRed = card.suit === Suit.Herz || card.suit === Suit.Karo;
+  const handleClick = () => {
+    if (onClick) {
+      onClick(card);
+    }
+  };
   return (
-    <div className={`card ${isRed ? 'red' : 'black'} ${className || ''}`} onClick={onClick}>
+    <div className={`card ${isRed ? 'red' : 'black'} ${className || ''}`} onClick={handleClick}>
       <div className="card-corner top">{valueSymbols[card.value]}</div>
       <div className="card-center">{suitSymbols[card.suit]}</div>
       <div className="card-corner bottom">{valueSymbols[card.value]}</div>
     </div>
   );
-};
+});
 
 const App: React.FC = () => {
   const { state, startNewGame, resumeGame, playCard, submitBid, announceReKontra, openSettings, settings, goToMainMenu, playerId } = useGame();
@@ -34,6 +39,17 @@ const App: React.FC = () => {
 
   // In Multiplayer, find "me". In Singleplayer, it is index 0.
   const humanPlayer = (playerId ? state.players.find(p => p.id === playerId || p.socketId === playerId) : state.players[0]) || state.players[0];
+
+  const handlePlayCard = useCallback((card: Card) => {
+    if (humanPlayer) {
+      playCard(humanPlayer.id, card);
+    }
+  }, [playCard, humanPlayer?.id]);
+
+  const sortedHand = useMemo(() => {
+    if (!humanPlayer?.hand) return [];
+    return sortCards(humanPlayer.hand, state.gameType, state.trumpSuit, settings);
+  }, [humanPlayer?.hand, state.gameType, state.trumpSuit, settings]);
 
   if (!humanPlayer) return <div className="game-container">Lade Spieler...</div>;
 
@@ -137,8 +153,8 @@ const App: React.FC = () => {
       </div>
 
       <div className="hand">
-        {humanPlayer?.hand && sortCards(humanPlayer.hand, state.gameType, state.trumpSuit, settings).map(card => (
-          <CardComponent key={card.id} card={card} onClick={() => playCard(humanPlayer.id, card)}/>
+        {sortedHand.map(card => (
+          <CardComponent key={card.id} card={card} onClick={handlePlayCard}/>
         ))}
       </div>
 

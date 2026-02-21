@@ -1,0 +1,54 @@
+/* Landscape Warning Overlay */
+.landscape-warning {
+  display: none; /* Hidden by default */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #0d4d1a;
+  color: white;
+  z-index: 9999;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  flex-direction: column;
+}
+
+.warning-content {
+  padding: 20px;
+}
+
+.warning-content h1 {
+  font-size: 2em;
+  margin-bottom: 10px;
+}
+
+.warning-content p {
+  font-size: 1.2em;
+  margin-bottom: 20px;
+}
+
+.rotate-icon {
+  font-size: 4em;
+  animation: rotate 2s infinite ease-in-out;
+}
+
+@keyframes rotate {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(90deg); }
+  50% { transform: rotate(90deg); }
+  75% { transform: rotate(0deg); }
+  100% { transform: rotate(0deg); }
+}
+
+/* Show only on mobile portrait */
+@media screen and (orientation: portrait) and (max-width: 1024px) {
+  .landscape-warning {
+    display: flex;
+  }
+  /* Hide the rest of the game when warning is shown */
+  .game-container {
+    display: none !important;
+  }
+}

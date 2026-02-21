@@ -54,7 +54,7 @@ const MAX_ROOMS = 100;
 const CREATE_ROOM_RATE_LIMIT = 2000; // 2 seconds
 const BOT_TURN_DELAY_MS = 1000;
 const BOT_BID_DELAY_MS = 500;
-const TRICK_EVALUATION_DELAY_MS = 5000;
+const TRICK_EVALUATION_DELAY_MS = 3500;
 const lastRoomCreation: Map<string, number> = new Map();
 const lastPlayerActionTime: Map<string, number> = new Map();
 

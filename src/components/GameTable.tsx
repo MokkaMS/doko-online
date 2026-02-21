@@ -65,7 +65,8 @@ export const GameTable: React.FC = () => {
 
   const handlePlayCard = useCallback((card: Card) => {
     if (humanPlayer) {
-      if (selectedCardId === card.id) {
+      const isTouch = window.matchMedia('(pointer: coarse)').matches;
+      if (!isTouch || selectedCardId === card.id) {
           setIsProcessing(true);
           playCard(humanPlayer.id, card);
           setSelectedCardId(null);

@@ -29,8 +29,8 @@ export const GameTable: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    let timer1: NodeJS.Timeout;
-    let timer2: NodeJS.Timeout;
+    let timer1: ReturnType<typeof setTimeout>;
+    let timer2: ReturnType<typeof setTimeout>;
 
     if (state.currentTrick.length === 4) {
       setTrickAnimationPhase('waiting');

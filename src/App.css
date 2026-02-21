@@ -34,7 +34,7 @@ body { margin: 0; padding: 0; background-color: #0d4d1a; color: white; font-fami
   border-radius: 50%;
   border: 12px solid #2e7d32;
   position: absolute;
-  top: 45%; /* Shift up slightly to make room for hand */
+  top: 42%; /* Moved up from 45% to create space for hand */
   left: 50%;
   transform: translate(-50%, -50%);
   display: flex;
@@ -45,7 +45,7 @@ body { margin: 0; padding: 0; background-color: #0d4d1a; color: white; font-fami
 
 .player-info { position: absolute; padding: 10px 15px; background: rgba(0,0,0,0.85); border-radius: 15px; display: flex; flex-direction: column; align-items: center; min-width: 120px; z-index: 50; border: 1px solid rgba(255,255,255,0.2); }
 /* Bottom Player: Move INSIDE the table to avoid overlap with cards */
-.player-bottom { bottom: 20px; left: 50%; transform: translateX(-50%); border-bottom: 4px solid #ffeb3b; }
+.player-bottom { bottom: 40px; left: 50%; transform: translateX(-50%); border-bottom: 4px solid #ffeb3b; } /* Moved up from 20px to 40px */
 .player-left { left: -60px; top: 50%; transform: translateY(-50%); }
 .player-top { top: 20px; left: 50%; transform: translateX(-50%); }
 .player-right { right: -60px; top: 50%; transform: translateY(-50%); }
@@ -71,7 +71,7 @@ body { margin: 0; padding: 0; background-color: #0d4d1a; color: white; font-fami
 .card-corner.bottom { align-self: flex-end; transform: rotate(180deg); }
 .card-center { font-size: 40px; text-align: center; flex: 1; display: flex; align-items: center; justify-content: center; }
 
-.hand { display: flex; justify-content: center; position: absolute; bottom: 20px; width: 100%; z-index: 100; pointer-events: none; }
+.hand { display: flex; justify-content: center; position: absolute; bottom: 10px; width: 100%; z-index: 100; pointer-events: none; } /* Moved down from 20px to 10px */
 .hand .card { margin-left: -45px; cursor: pointer; pointer-events: auto; transition: 0.2s; }
 .hand .card:first-child { margin-left: 0; }
 .hand .card:hover { transform: translateY(-50px) scale(1.1); z-index: 110; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }

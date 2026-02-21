@@ -80,6 +80,10 @@ export const GameTable: React.FC = () => {
             setSelectedCardId(null);
         }
     }}>
+      <div className="game-header">
+         <h1 className="game-status-title">DOPPELKOPF - {state.phase === 'Bidding' ? 'Vorbehalt wählen' : (state.gameType === 'Normal' ? 'Normalspiel' : state.gameType)}</h1>
+      </div>
+
       <div
         className="game-board-scaler"
         style={{
@@ -90,10 +94,6 @@ export const GameTable: React.FC = () => {
           position: 'relative'
         }}
       >
-        <div className="game-header">
-           <h1 className="game-status-title">DOPPELKOPF - {state.phase === 'Bidding' ? 'Vorbehalt wählen' : (state.gameType === 'Normal' ? 'Normalspiel' : state.gameType)}</h1>
-        </div>
-
         <div className="game-actions">
           {state.phase === 'Playing' && humanPlayer?.hand?.length >= 10 && !state.reKontraAnnouncements[humanPlayer.id] && (
              <div className="re-kontra-buttons">

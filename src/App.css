@@ -34,7 +34,7 @@ body { margin: 0; padding: 0; background-color: #0d4d1a; color: white; font-fami
   border-radius: 50%;
   border: 12px solid #2e7d32;
   position: absolute;
-  top: 42%; /* Shift up slightly to make room for hand */
+  top: 38%; /* Shift up higher (was 42%) */
   left: 50%;
   transform: translate(-50%, -50%);
   display: flex;
@@ -71,7 +71,7 @@ body { margin: 0; padding: 0; background-color: #0d4d1a; color: white; font-fami
 .card-corner.bottom { align-self: flex-end; transform: rotate(180deg); }
 .card-center { font-size: 40px; text-align: center; flex: 1; display: flex; align-items: center; justify-content: center; }
 
-.hand { display: flex; justify-content: center; position: absolute; bottom: -60px; width: 100%; z-index: 100; pointer-events: none; } /* Pushed further down from 10px to -60px */
+.hand { display: flex; justify-content: center; position: absolute; bottom: -120px; width: 100%; z-index: 100; pointer-events: none; } /* Drastic move to -120px */
 .hand .card { margin-left: -45px; cursor: pointer; pointer-events: auto; transition: 0.2s; }
 .hand .card:first-child { margin-left: 0; }
 .hand .card:hover { transform: translateY(-50px) scale(1.1); z-index: 110; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
@@ -124,7 +124,7 @@ body { margin: 0; padding: 0; background-color: #0d4d1a; color: white; font-fami
 .trick-card-label { font-size: 13px; font-weight: bold; background: rgba(0,0,0,0.8); padding: 2px 8px; border-radius: 4px; }
 
 /* UI Overlays */
-.game-actions { position: absolute; top: 100px; width: 100%; display: flex; justify-content: center; z-index: 200; pointer-events: none; }
+.game-actions { position: absolute; top: 60px; width: 100%; display: flex; justify-content: center; z-index: 200; pointer-events: none; } /* Moved top to 60px */
 .game-actions > * { pointer-events: auto; }
 .ansage-btn { padding: 12px 25px; font-size: 18px; font-weight: bold; border-radius: 10px; cursor: pointer; border: 2px solid white; color: white; box-shadow: 0 4px 15px rgba(0,0,0,0.4); margin: 0 10px; }
 .ansage-btn.re { background: #d32f2f; }

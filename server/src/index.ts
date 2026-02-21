@@ -503,7 +503,7 @@ io.on('connection', (socket: Socket) => {
              }
         }
         state.phase = 'Playing';
-        state.currentPlayerIndex = (state.dealerIndex + 1) % 4;
+        state.currentPlayerIndex = GameEngine.determineStartingPlayerIndex(finalType, state.dealerIndex, soloPlayerId, state.players);
         state.trickStarterIndex = state.currentPlayerIndex;
         emitToRoom(roomId, 'game_state_update', state);
         handleBotTurns(roomId);

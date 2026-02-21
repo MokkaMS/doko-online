@@ -87,6 +87,27 @@ body { margin: 0; padding: 0; background-color: #0d4d1a; color: white; font-fami
 .tcc-2 { top: 140px; left: 50%; transform: translateX(-50%); animation: p2In 0.4s ease-out; }
 .tcc-3 { right: 160px; top: 50%; transform: translateY(-50%); animation: p3In 0.4s ease-out; }
 
+/* Animation to Center (Pile) */
+.tcc-0.move-to-center {
+  bottom: 50%;
+  transform: translate(-50%, 50%);
+}
+
+.tcc-1.move-to-center {
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.tcc-2.move-to-center {
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.tcc-3.move-to-center {
+  right: 50%;
+  transform: translate(50%, -50%);
+}
+
 /* Animation to Winner */
 .move-to-player-0 {
   bottom: 20px !important;

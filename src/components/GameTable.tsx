@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState, useLayoutEffect } from 'react';
+import React, { useCallback, useMemo, useState, useLayoutEffect, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
 import { Card, Suit, CardValue } from '../logic/types';
 import { sortCards } from '../logic/cardUtils';
@@ -10,6 +10,7 @@ export const GameTable: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [scale, setScale] = useState(1);
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
+  const [trickAnimationPhase, setTrickAnimationPhase] = useState<'idle' | 'waiting' | 'center' | 'winner'>('idle');
 
   const baseWidth = 1024;
   const baseHeight = 768;
@@ -27,8 +28,32 @@ export const GameTable: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  useEffect(() => {
+    let timer1: NodeJS.Timeout;
+    let timer2: NodeJS.Timeout;
+
+    if (state.currentTrick.length === 4) {
+      setTrickAnimationPhase('waiting');
+      // Step 1: Wait 1s (cards on table)
+      timer1 = setTimeout(() => {
+        setTrickAnimationPhase('center');
+        // Step 2: Move to center (wait 1s total: 0.5s transition + 0.5s pause)
+        timer2 = setTimeout(() => {
+          setTrickAnimationPhase('winner');
+        }, 1000);
+      }, 1000);
+    } else {
+      setTrickAnimationPhase('idle');
+    }
+
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+    };
+  }, [state.currentTrick.length]);
+
   // Reset processing state and selection when game state updates
-  React.useEffect(() => {
+  useEffect(() => {
     setIsProcessing(false);
     // Reset selection if the hand size changes (card played) or phase changes
     // We can also reset on every state update to be safe, but that might be annoying if polling updates happen.
@@ -169,7 +194,13 @@ export const GameTable: React.FC = () => {
             {state.currentTrick.map((card, i) => {
                const playerIdx = (state.trickStarterIndex + i) % 4;
                if (!state.players[playerIdx]) return null;
-               const animationClass = (state.trickWinnerIndex !== null && state.currentTrick.length === 4) ? `move-to-player-${state.trickWinnerIndex}` : '';
+
+               let animationClass = '';
+               if (state.currentTrick.length === 4) {
+                   if (trickAnimationPhase === 'center') animationClass = 'move-to-center';
+                   else if (trickAnimationPhase === 'winner' && state.trickWinnerIndex !== null) animationClass = `move-to-player-${state.trickWinnerIndex}`;
+               }
+
                return (
                  <div key={card.id} className={`trick-card-wrapper tcc-${playerIdx} ${animationClass}`}>
                    <div className="trick-card-label">{state.players[playerIdx].name}</div>

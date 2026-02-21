@@ -48,6 +48,19 @@ export class GameEngine {
     return this.determineTeams(newState);
   }
 
+  static determineStartingPlayerIndex(gameType: GameType, dealerIndex: number, soloPlayerId: string | null, players: Player[]): number {
+    if ([GameType.DamenSolo, GameType.BubenSolo, GameType.FarbenSolo, GameType.Fleischlos].includes(gameType)) {
+      if (soloPlayerId) {
+        const index = players.findIndex(p => p.id === soloPlayerId);
+        if (index !== -1) {
+          return index;
+        }
+      }
+    }
+    // Default: Forehand (Player left of dealer)
+    return (dealerIndex + 1) % 4;
+  }
+
   static determineFinalGameType(bids: Record<string, string>, playerIdsInOrder: string[]): { gameType: GameType, trumpSuit: Suit | null, soloPlayerId: string | null } {
     const priorityOrder = [
       GameType.FarbenSolo,

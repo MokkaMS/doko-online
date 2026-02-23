@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState, useLayoutEffect, useEffect } from 'react';
+import React, { useCallback, useMemo, useState, useLayoutEffect, useEffect, useRef } from 'react';
 import { useGame } from '../context/GameContext';
 import { Card, Suit, CardValue } from '../logic/types';
 import { sortCards } from '../logic/cardUtils';
@@ -8,6 +8,7 @@ export const GameTable: React.FC = () => {
   const { state, playCard, submitBid, announceReKontra, settings, goToMainMenu, playerId, startNewGame } = useGame();
   const [showFarbenSoloSelection, setShowFarbenSoloSelection] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const processingRef = useRef(false);
   const [scale, setScale] = useState(1);
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [trickAnimationPhase, setTrickAnimationPhase] = useState<'idle' | 'waiting' | 'center' | 'winner'>('idle');
@@ -55,6 +56,7 @@ export const GameTable: React.FC = () => {
   // Reset processing state and selection when game state updates
   useEffect(() => {
     setIsProcessing(false);
+    processingRef.current = false;
     // Reset selection if the hand size changes (card played) or phase changes
     // We can also reset on every state update to be safe, but that might be annoying if polling updates happen.
     // Better: reset if the card is no longer in hand.
@@ -70,17 +72,28 @@ export const GameTable: React.FC = () => {
   }, [state.players, humanPlayer]);
 
   const handlePlayCard = useCallback((card: Card) => {
-    if (humanPlayer) {
+    if (humanPlayer && !processingRef.current && !isProcessing) {
+      if (state.currentPlayerIndex !== localPlayerIndex) return;
+
       const isTouch = window.matchMedia('(pointer: coarse)').matches;
       if (!isTouch || selectedCardId === card.id) {
+          processingRef.current = true;
           setIsProcessing(true);
           playCard(humanPlayer.id, card);
           setSelectedCardId(null);
+
+          // Safety timeout to reset processing state if server doesn't respond
+          setTimeout(() => {
+              if (processingRef.current) {
+                  processingRef.current = false;
+                  setIsProcessing(false);
+              }
+          }, 2000);
       } else {
           setSelectedCardId(card.id);
       }
     }
-  }, [playCard, humanPlayer?.id, selectedCardId]);
+  }, [playCard, humanPlayer?.id, selectedCardId, isProcessing, state.currentPlayerIndex, localPlayerIndex]);
 
   const handleFarbenSoloClick = () => {
       setShowFarbenSoloSelection(true);
@@ -233,7 +246,7 @@ export const GameTable: React.FC = () => {
               key={card.id}
               card={card}
               onClick={handlePlayCard}
-              disabled={state.phase !== 'Playing' || isProcessing || state.currentTrick.length >= 4}
+              disabled={state.phase !== 'Playing' || isProcessing || state.currentTrick.length >= 4 || state.currentPlayerIndex !== localPlayerIndex}
               className={selectedCardId === card.id ? 'selected' : ''}
             />
           ))}

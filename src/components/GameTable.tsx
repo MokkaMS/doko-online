@@ -35,14 +35,14 @@ export const GameTable: React.FC = () => {
 
     if (state.currentTrick.length === 4) {
       setTrickAnimationPhase('waiting');
-      // Step 1: Wait 1s (cards on table)
+      // Step 1: Wait 800ms (cards on table)
       timer1 = setTimeout(() => {
         setTrickAnimationPhase('center');
-        // Step 2: Move to center (wait 1s total: 0.5s transition + 0.5s pause)
+        // Step 2: Move to center (wait 1.2s total: 1.0s transition + 0.2s pause)
         timer2 = setTimeout(() => {
           setTrickAnimationPhase('winner');
-        }, 1000);
-      }, 1000);
+        }, 1200);
+      }, 800);
     } else {
       setTrickAnimationPhase('idle');
     }
@@ -231,7 +231,7 @@ export const GameTable: React.FC = () => {
                }
 
                return (
-                 <div key={card.id} className={`trick-card-wrapper tcc-${relativeIdx} ${animationClass}`}>
+                 <div key={card.id} className={`trick-card-wrapper tcc-${relativeIdx} ${animationClass}`} style={{ zIndex: i }}>
                    <div className="trick-card-label">{state.players[playerIdx].name}</div>
                    <CardComponent card={card} className="trick-card" />
                  </div>

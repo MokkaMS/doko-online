@@ -154,8 +154,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const goToMainMenu = useCallback(() => {
     if (roomId) {
-        socket.disconnect();
-        // Do NOT setRoomId(null) in storage.
+        socket.emit('leave_room', { roomId });
+        setStoredRoomId(null);
         setRoomId(null);
     }
     setState(prev => ({ ...prev, phase: 'MainMenu', lastActivePhase: prev.phase as any }));
@@ -175,11 +175,13 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const joinGame = (rid: string, pname: string) => {
       setStoredPlayerName(pname);
+      if (!socket.connected) socket.connect();
       socket.emit('join_room', { roomId: rid, playerName: pname, playerId });
   };
 
   const createGame = (pname: string) => {
       setStoredPlayerName(pname);
+      if (!socket.connected) socket.connect();
       socket.emit('create_room', { playerName: pname, playerId });
   };
 

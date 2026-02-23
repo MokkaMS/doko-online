@@ -63,6 +63,12 @@ export const GameTable: React.FC = () => {
   // In Multiplayer, find "me". In Singleplayer, it is index 0.
   const humanPlayer = (playerId ? state.players.find(p => p.id === playerId || p.socketId === playerId) : state.players[0]) || state.players[0];
 
+  const localPlayerIndex = useMemo(() => {
+      if (!humanPlayer) return 0;
+      const idx = state.players.findIndex(p => p.id === humanPlayer.id);
+      return idx >= 0 ? idx : 0;
+  }, [state.players, humanPlayer]);
+
   const handlePlayCard = useCallback((card: Card) => {
     if (humanPlayer) {
       const isTouch = window.matchMedia('(pointer: coarse)').matches;
@@ -162,8 +168,11 @@ export const GameTable: React.FC = () => {
           {[0,1,2,3].map(idx => {
             const p = state.players[idx];
             if (!p) return null;
-            // Simple positioning for now: fixed
-            const posClass = ['player-bottom', 'player-left', 'player-top', 'player-right'][idx];
+
+            // Calculate relative position: "Me" is always bottom (index 0 relative)
+            const relativeIdx = (idx - localPlayerIndex + 4) % 4;
+            const posClass = ['player-bottom', 'player-left', 'player-top', 'player-right'][relativeIdx];
+
             return (
               <div key={p.id} className={`player-info ${posClass}`}>
                 <div className="player-header">
@@ -196,14 +205,20 @@ export const GameTable: React.FC = () => {
                const playerIdx = (state.trickStarterIndex + i) % 4;
                if (!state.players[playerIdx]) return null;
 
+               // Convert absolute player index to relative view index
+               const relativeIdx = (playerIdx - localPlayerIndex + 4) % 4;
+
                let animationClass = '';
                if (state.currentTrick.length === 4) {
                    if (trickAnimationPhase === 'center') animationClass = 'move-to-center';
-                   else if (trickAnimationPhase === 'winner' && state.trickWinnerIndex !== null) animationClass = `move-to-player-${state.trickWinnerIndex}`;
+                   else if (trickAnimationPhase === 'winner' && state.trickWinnerIndex !== null) {
+                       const relativeWinnerIdx = (state.trickWinnerIndex - localPlayerIndex + 4) % 4;
+                       animationClass = `move-to-player-${relativeWinnerIdx}`;
+                   }
                }
 
                return (
-                 <div key={card.id} className={`trick-card-wrapper tcc-${playerIdx} ${animationClass}`}>
+                 <div key={card.id} className={`trick-card-wrapper tcc-${relativeIdx} ${animationClass}`}>
                    <div className="trick-card-label">{state.players[playerIdx].name}</div>
                    <CardComponent card={card} className="trick-card" />
                  </div>

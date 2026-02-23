@@ -90,6 +90,21 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
     }
 
+    const handleConnect = () => {
+      const rid = getStoredRoomId();
+      const pname = getStoredPlayerName();
+      if (rid && playerId) {
+        console.log('Reconnecting to room:', rid);
+        socket.emit('join_room', {
+          roomId: rid,
+          playerName: pname || 'Player',
+          playerId
+        });
+      }
+    };
+
+    socket.on('connect', handleConnect);
+
     socket.on('room_created', ({ roomId, players, settings, hostId, isPublic }: { roomId: string, players: any[], settings: GameSettings, hostId: string, isPublic: boolean }) => {
       setRoomId(roomId);
       setStoredRoomId(roomId);
@@ -154,6 +169,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       socket.off('game_started');
       socket.off('game_state_update');
       socket.off('error');
+      socket.off('connect', handleConnect);
       socket.disconnect();
     };
   }, [playerId]);

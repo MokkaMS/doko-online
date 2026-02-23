@@ -25,3 +25,15 @@ export const setStoredRoomId = (roomId: string | null) => {
     localStorage.removeItem('doppelkopf_room_id');
   }
 };
+
+export const getStoredPlayerName = (): string | null => {
+  return localStorage.getItem('doppelkopf_player_name');
+};
+
+export const setStoredPlayerName = (name: string) => {
+  if (name) {
+    localStorage.setItem('doppelkopf_player_name', name);
+  } else {
+    localStorage.removeItem('doppelkopf_player_name');
+  }
+};

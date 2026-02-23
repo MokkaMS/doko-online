@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useGame } from '../context/GameContext';
+import { getStoredPlayerName } from '../utils/storage';
 
 export const MultiplayerSetup: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const { joinGame, createGame } = useGame();
-  const [name, setName] = useState('');
+  const [name, setName] = useState(() => getStoredPlayerName() || '');
   const [roomId, setRoomId] = useState('');
 
   const handleJoin = () => {

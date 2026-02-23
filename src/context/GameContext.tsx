@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { Card, GameState, GameSettings, GameType } from '../logic/types';
-import { getStoredPlayerId, getStoredRoomId, setStoredRoomId } from '../utils/storage';
+import { getStoredPlayerId, getStoredRoomId, setStoredRoomId, getStoredPlayerName, setStoredPlayerName } from '../utils/storage';
 
 const socket: Socket = io({ autoConnect: false });
 
@@ -64,6 +64,17 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     socket.connect();
 
+    const storedRoomId = getStoredRoomId();
+    const storedPlayerName = getStoredPlayerName();
+
+    if (storedRoomId && playerId) {
+      socket.emit('join_room', {
+        roomId: storedRoomId,
+        playerName: storedPlayerName || 'Player',
+        playerId
+      });
+    }
+
     socket.on('room_created', ({ roomId, players, settings }: { roomId: string, players: any[], settings: GameSettings }) => {
       setRoomId(roomId);
       setStoredRoomId(roomId);
@@ -91,6 +102,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
     
     socket.on('error', (msg: string) => {
+        if (msg === 'Room not found') {
+            setStoredRoomId(null);
+        }
         alert(msg);
     });
 
@@ -103,7 +117,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       socket.off('error');
       socket.disconnect();
     };
-  }, []);
+  }, [playerId]);
 
   const announceReKontra = useCallback((pid: string, type: 'Re' | 'Kontra') => {
     if (roomId) {
@@ -160,10 +174,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const joinGame = (rid: string, pname: string) => {
+      setStoredPlayerName(pname);
       socket.emit('join_room', { roomId: rid, playerName: pname, playerId });
   };
 
   const createGame = (pname: string) => {
+      setStoredPlayerName(pname);
       socket.emit('create_room', { playerName: pname, playerId });
   };
 

@@ -309,6 +309,38 @@ io.on('connection', (socket: Socket) => {
     socket.emit('room_created', { roomId, players: rooms[roomId].players, settings: rooms[roomId].settings });
   });
 
+  socket.on('leave_room', ({ roomId }: { roomId: string }) => {
+    const room = rooms[roomId];
+    if (room) {
+        const player = room.players.find(p => p.socketId === socket.id);
+        if (player) {
+            // Remove player
+            const idx = room.players.indexOf(player);
+            if (idx !== -1) {
+                room.players.splice(idx, 1);
+            }
+
+            // Clear disconnect timeout if exists
+            const timer = disconnectTimeouts.get(player.id);
+            if (timer) {
+                clearTimeout(timer);
+                disconnectTimeouts.delete(player.id);
+            }
+
+            socket.leave(roomId);
+
+            if (room.players.length === 0) {
+                delete rooms[roomId];
+            } else {
+                io.to(roomId).emit('player_left', room.players);
+                io.to(roomId).emit('player_joined', room.players); // Update lists
+            }
+
+            socket.emit('left_room');
+        }
+    }
+  });
+
   socket.on('join_room', ({ roomId, playerName, playerId }: { roomId: string, playerName: string, playerId: string }) => {
     const error = validatePlayerName(playerName);
     if (error) {

@@ -87,70 +87,67 @@ body { margin: 0; padding: 0; background-color: #0d4d1a; color: white; font-fami
 
 /* Trick Cards on Table */
 .trick { width: 100%; height: 100%; position: relative; pointer-events: none; }
-.trick-card-wrapper { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 5px; z-index: 20; transition: all 1.5s ease-in-out; }
-.trick-card { width: 85px; height: 125px; transform: none !important; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-.trick-card .card-center { font-size: 32px; }
-.trick-card .card-corner { font-size: 15px; }
-
-.tcc-0 { bottom: 140px; left: 50%; transform: translateX(-50%); animation: p0In 0.4s ease-out; }
-.tcc-1 { left: 160px; top: 50%; transform: translateY(-50%); animation: p1In 0.4s ease-out; }
-.tcc-2 { top: 140px; left: 50%; transform: translateX(-50%); animation: p2In 0.4s ease-out; }
-.tcc-3 { right: 160px; top: 50%; transform: translateY(-50%); animation: p3In 0.4s ease-out; }
-
-/* Animation to Center (Pile) */
-.tcc-0.move-to-center {
-  bottom: 50%;
-  transform: translate(-50%, 50%);
-}
-
-.tcc-1.move-to-center {
+.trick-card-wrapper {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  z-index: 20;
+  transition: all 1.0s ease-in-out;
+  /* Unified positioning base: Center of table */
+  top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
 }
 
-.tcc-2.move-to-center {
-  top: 50%;
-  transform: translate(-50%, -50%);
+.trick-card { width: 85px; height: 125px; transform: none !important; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+.trick-card .card-center { font-size: 32px; }
+.trick-card .card-corner { font-size: 15px; }
+
+/* Initial Positions (relative to center) */
+.tcc-0 { transform: translate(-50%, calc(-50% + 135px)); animation: p0In 0.4s ease-out; }
+.tcc-1 { transform: translate(calc(-50% - 265px), -50%); animation: p1In 0.4s ease-out; }
+.tcc-2 { transform: translate(-50%, calc(-50% - 135px)); animation: p2In 0.4s ease-out; }
+.tcc-3 { transform: translate(calc(-50% + 265px), -50%); animation: p3In 0.4s ease-out; }
+
+/* Animation to Center (Pile) */
+.move-to-center {
+  transform: translate(-50%, -50%) !important;
 }
 
-.tcc-3.move-to-center {
-  right: 50%;
-  transform: translate(50%, -50%);
+/* Hide labels during animation */
+.move-to-center .trick-card-label,
+[class*="move-to-player"] .trick-card-label {
+  opacity: 0;
+  transition: opacity 0.3s;
 }
 
 /* Animation to Winner */
 .move-to-player-0 {
-  bottom: 20px !important;
-  left: 50% !important;
-  transform: translateX(-50%) scale(0.5) !important;
+  transform: translate(-50%, calc(-50% + 255px)) scale(0.5) !important;
   opacity: 0;
 }
 
 .move-to-player-1 {
-  left: -60px !important;
-  top: 50% !important;
-  transform: translateY(-50%) scale(0.5) !important;
+  transform: translate(calc(-50% - 485px), -50%) scale(0.5) !important;
   opacity: 0;
 }
 
 .move-to-player-2 {
-  top: 20px !important;
-  left: 50% !important;
-  transform: translateX(-50%) scale(0.5) !important;
+  transform: translate(-50%, calc(-50% - 255px)) scale(0.5) !important;
   opacity: 0;
 }
 
 .move-to-player-3 {
-  right: -60px !important;
-  top: 50% !important;
-  transform: translateY(-50%) scale(0.5) !important;
+  transform: translate(calc(-50% + 485px), -50%) scale(0.5) !important;
   opacity: 0;
 }
 
-@keyframes p0In { from { transform: translate(-50%, 200px); opacity: 0; } }
-@keyframes p1In { from { transform: translate(-200px, -50%); opacity: 0; } }
-@keyframes p2In { from { transform: translate(-50%, -200px); opacity: 0; } }
-@keyframes p3In { from { transform: translate(200px, -50%); opacity: 0; } }
+@keyframes p0In { from { transform: translate(-50%, calc(-50% + 300px)); opacity: 0; } }
+@keyframes p1In { from { transform: translate(calc(-50% - 400px), -50%); opacity: 0; } }
+@keyframes p2In { from { transform: translate(-50%, calc(-50% - 300px)); opacity: 0; } }
+@keyframes p3In { from { transform: translate(calc(-50% + 400px), -50%); opacity: 0; } }
 
 .trick-card-label { font-size: 13px; font-weight: bold; background: rgba(0,0,0,0.8); padding: 2px 8px; border-radius: 4px; }
 

@@ -45,6 +45,8 @@ interface Room {
   }[];
   gameState: GameState | null;
   settings: GameSettings;
+  hostId: string;
+  isPublic: boolean;
 }
 
 const rooms: Record<string, Room> = Object.create(null);
@@ -262,6 +264,7 @@ io.on('connection', (socket: Socket) => {
   console.log('User connected:', socket.id);
 
   socket.on('create_room', ({ playerName, playerId }: { playerName: string, playerId: string }) => {
+    console.log(`[create_room] Request from ${playerName} (${playerId})`);
     // 1. Check Global Limit
     if (Object.keys(rooms).length >= MAX_ROOMS) {
       socket.emit('error', 'Server is full (max 100 rooms)');
@@ -303,10 +306,20 @@ io.on('connection', (socket: Socket) => {
           connected: true
       }],
       gameState: null,
-      settings: { ...defaultSettings }
+      settings: { ...defaultSettings },
+      hostId: playerId,
+      isPublic: false
     };
     socket.join(roomId);
-    socket.emit('room_created', { roomId, players: rooms[roomId].players, settings: rooms[roomId].settings });
+    socket.emit('room_created', {
+        roomId,
+        players: rooms[roomId].players,
+        settings: rooms[roomId].settings,
+        hostId: rooms[roomId].hostId,
+        isPublic: rooms[roomId].isPublic
+    });
+    io.emit('public_rooms_update', getPublicRooms());
+    console.log(`[create_room] Room ${roomId} created by ${playerName}`);
   });
 
   socket.on('leave_room', ({ roomId }: { roomId: string }) => {
@@ -332,6 +345,15 @@ io.on('connection', (socket: Socket) => {
             if (room.players.length === 0) {
                 delete rooms[roomId];
             } else {
+                // Transfer host if needed
+                if (room.hostId === player.id) {
+                    const nextHost = room.players.find(p => !p.isBot && p.connected);
+                    if (nextHost) {
+                        room.hostId = nextHost.id;
+                        io.to(roomId).emit('room_update', { hostId: room.hostId, isPublic: room.isPublic });
+                    }
+                }
+
                 io.to(roomId).emit('player_left', room.players);
                 io.to(roomId).emit('player_joined', room.players); // Update lists
             }
@@ -342,6 +364,7 @@ io.on('connection', (socket: Socket) => {
   });
 
   socket.on('join_room', ({ roomId, playerName, playerId }: { roomId: string, playerName: string, playerId: string }) => {
+    console.log(`[join_room] Request from ${playerName} (${playerId}) to join ${roomId}`);
     const error = validatePlayerName(playerName);
     if (error) {
       socket.emit('error', error);
@@ -365,7 +388,13 @@ io.on('connection', (socket: Socket) => {
           socket.join(roomId);
           io.to(roomId).emit('player_joined', room.players);
 
-          socket.emit('joined_room', { roomId, players: room.players, settings: room.settings });
+          socket.emit('joined_room', {
+              roomId,
+              players: room.players,
+              settings: room.settings,
+              hostId: room.hostId,
+              isPublic: room.isPublic
+          });
           if (room.gameState) {
              const sanitized = sanitizeState(room.gameState, playerId);
              socket.emit('game_state_update', sanitized);
@@ -384,33 +413,59 @@ io.on('connection', (socket: Socket) => {
               connected: true
           });
           socket.join(roomId);
+          console.log(`[join_room] ${playerName} joined ${roomId}. Players: ${room.players.map(p => p.name).join(', ')}`);
+
           io.to(roomId).emit('player_joined', room.players);
-          socket.emit('joined_room', { roomId, players: room.players, settings: room.settings });
+
+          socket.emit('joined_room', {
+              roomId,
+              players: room.players,
+              settings: room.settings,
+              hostId: room.hostId,
+              isPublic: room.isPublic
+          });
       }
     } else {
+      console.log(`[join_room] Room ${roomId} not found for ${playerName}`);
       socket.emit('error', 'Room not found');
     }
   });
 
   socket.on('add_bot', (roomId: string) => {
     const room = rooms[roomId];
-    if (room && room.players.length < 4) {
-      const botId = `bot-${Math.random().toString(36).substr(2, 5)}`;
-      room.players.push({
-          id: botId,
-          name: `Bot ${room.players.length}`,
-          socketId: botId,
-          ready: true,
-          isBot: true,
-          connected: true
-      });
-      io.to(roomId).emit('player_joined', room.players);
+    if (room) {
+        // Validate host
+        const requester = room.players.find(p => p.socketId === socket.id);
+        if (!requester || requester.id !== room.hostId) {
+            socket.emit('error', 'Only the host can add bots.');
+            return;
+        }
+
+        if (room.players.length < 4) {
+            const botId = `bot-${Math.random().toString(36).substr(2, 5)}`;
+            room.players.push({
+                id: botId,
+                name: `Bot ${room.players.length}`,
+                socketId: botId,
+                ready: true,
+                isBot: true,
+                connected: true
+            });
+            io.to(roomId).emit('player_joined', room.players);
+        }
     }
   });
 
   socket.on('start_game', (roomId: string) => {
     const room = rooms[roomId];
     if (room) {
+      // Validate host
+      const requester = room.players.find(p => p.socketId === socket.id);
+      if (!requester || requester.id !== room.hostId) {
+          socket.emit('error', 'Only the host can start the game.');
+          return;
+      }
+
       // Auto-fill with bots if less than 4
       while (room.players.length < 4) {
         const botId = `bot-${Math.random().toString(36).substr(2, 5)}`;
@@ -447,6 +502,10 @@ io.on('connection', (socket: Socket) => {
 
       const stateWithTeams = GameEngine.determineTeams(initialState);
       room.gameState = stateWithTeams;
+
+      // When game starts, it's no longer a public "lobby" effectively, but we can keep isPublic flag true.
+      // The filter for public lobbies will check gameState === null.
+
       emitToRoom(roomId, 'game_started', stateWithTeams);
       
       // If first player is a bot, start its turn
@@ -466,6 +525,84 @@ io.on('connection', (socket: Socket) => {
       }
     }
   });
+
+  socket.on('toggle_public', ({ roomId }: { roomId: string }) => {
+    const room = rooms[roomId];
+    if (room) {
+       const player = room.players.find(p => p.socketId === socket.id);
+       if (player && room.hostId === player.id) {
+          room.isPublic = !room.isPublic;
+          console.log(`[toggle_public] Room ${roomId} is now ${room.isPublic ? 'Public' : 'Private'}`);
+          io.to(roomId).emit('room_update', { hostId: room.hostId, isPublic: room.isPublic });
+          io.emit('public_rooms_update', getPublicRooms());
+       } else {
+          console.log(`[toggle_public] Failed: User is not host or not in room. Host: ${room.hostId}, Requester: ${player?.id}`);
+       }
+    } else {
+       console.log(`[toggle_public] Room ${roomId} not found`);
+    }
+  });
+
+  socket.on('kick_player', ({ roomId, targetId }: { roomId: string, targetId: string }) => {
+    const room = rooms[roomId];
+    if (!room) return;
+
+    const requester = room.players.find(p => p.socketId === socket.id);
+    if (!requester || requester.id !== room.hostId) {
+        socket.emit('error', 'Only the host can kick players.');
+        return;
+    }
+
+    if (targetId === requester.id) {
+        socket.emit('error', 'You cannot kick yourself.');
+        return;
+    }
+
+    const targetPlayer = room.players.find(p => p.id === targetId);
+    if (!targetPlayer) return;
+
+    if (targetPlayer.isBot) {
+        // Remove bot
+        const idx = room.players.indexOf(targetPlayer);
+        if (idx !== -1) {
+            room.players.splice(idx, 1);
+            io.to(roomId).emit('player_left', room.players);
+            io.to(roomId).emit('player_joined', room.players);
+        }
+    } else {
+        // Kick human
+        const idx = room.players.indexOf(targetPlayer);
+        if (idx !== -1) {
+            room.players.splice(idx, 1);
+            // Notify the kicked player
+            if (targetPlayer.socketId) {
+                io.to(targetPlayer.socketId).emit('kicked');
+                // Force disconnect logic
+                const socketToKick = io.sockets.sockets.get(targetPlayer.socketId);
+                if (socketToKick) {
+                    socketToKick.leave(roomId);
+                }
+            }
+            io.to(roomId).emit('player_left', room.players);
+            io.to(roomId).emit('player_joined', room.players);
+        }
+    }
+  });
+
+  socket.on('get_public_rooms', () => {
+    const publicRooms = getPublicRooms();
+    socket.emit('public_rooms_list', publicRooms);
+  });
+
+  const getPublicRooms = () => {
+    return Object.values(rooms)
+        .filter(r => r.isPublic && r.gameState === null && r.players.length < 4)
+        .map(r => ({
+            id: r.id,
+            playerCount: r.players.length,
+            hostName: r.players.find(p => p.id === r.hostId)?.name || 'Unknown'
+        }));
+  };
 
   const handleBotBid = (roomId: string) => {
       const room = rooms[roomId];
@@ -625,6 +762,15 @@ io.on('connection', (socket: Socket) => {
                 emitToRoom(roomId, 'game_state_update', room.gameState);
             }
 
+            // Transfer host immediately if host disconnected
+            if (room.hostId === player.id) {
+                const nextHost = room.players.find(p => !p.isBot && p.connected);
+                if (nextHost) {
+                    room.hostId = nextHost.id;
+                    io.to(roomId).emit('room_update', { hostId: room.hostId, isPublic: room.isPublic });
+                }
+            }
+
             const timer = setTimeout(() => {
                 const currentRoom = rooms[roomId];
                 if (!currentRoom) return; // Room might be gone
@@ -636,8 +782,19 @@ io.on('connection', (socket: Socket) => {
                     if (idx !== -1) {
                         currentRoom.players.splice(idx, 1);
                         io.to(roomId).emit('player_left', currentRoom.players);
+
+                        // Check empty room
                         if (currentRoom.players.length === 0) {
                             delete rooms[roomId];
+                        } else {
+                            // Transfer host again if needed (e.g. if the "acting host" also timed out)
+                            if (currentRoom.hostId === player.id) {
+                                const nextHost = currentRoom.players.find(pl => !pl.isBot && pl.connected);
+                                if (nextHost) {
+                                    currentRoom.hostId = nextHost.id;
+                                    io.to(roomId).emit('room_update', { hostId: currentRoom.hostId, isPublic: currentRoom.isPublic });
+                                }
+                            }
                         }
                     }
                 }

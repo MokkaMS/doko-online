@@ -5,10 +5,19 @@ import { getStoredPlayerId, getStoredRoomId, setStoredRoomId, getStoredPlayerNam
 
 const socket: Socket = io({ autoConnect: false });
 
+export interface PublicRoom {
+    id: string;
+    playerCount: number;
+    hostName: string;
+}
+
 interface GameContextType {
   state: GameState;
   settings: GameSettings;
   roomId: string | null;
+  hostId: string | null;
+  isPublic: boolean;
+  publicRooms: PublicRoom[];
   playCard: (playerId: string, card: Card) => void;
   submitBid: (playerId: string, bid: string) => void;
   announceReKontra: (playerId: string, type: 'Re' | 'Kontra') => void;
@@ -22,6 +31,9 @@ interface GameContextType {
   createGame: (playerName: string) => void;
   startGameMultiplayer: () => void;
   addBotMultiplayer: () => void;
+  togglePublic: () => void;
+  kickPlayer: (targetId: string) => void;
+  refreshPublicRooms: () => void;
   playerId: string | null;
 }
 
@@ -59,6 +71,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [settings, setSettings] = useState<GameSettings>(defaultSettings);
   const [state, setState] = useState<GameState>(initialGameState);
   const [roomId, setRoomId] = useState<string | null>(null);
+  const [hostId, setHostId] = useState<string | null>(null);
+  const [isPublic, setIsPublic] = useState<boolean>(false);
+  const [publicRooms, setPublicRooms] = useState<PublicRoom[]>([]);
   const [playerId] = useState<string>(() => getStoredPlayerId());
 
   useEffect(() => {
@@ -75,22 +90,43 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
     }
 
-    socket.on('room_created', ({ roomId, players, settings }: { roomId: string, players: any[], settings: GameSettings }) => {
+    socket.on('room_created', ({ roomId, players, settings, hostId, isPublic }: { roomId: string, players: any[], settings: GameSettings, hostId: string, isPublic: boolean }) => {
       setRoomId(roomId);
       setStoredRoomId(roomId);
       setSettings(settings);
+      setHostId(hostId);
+      setIsPublic(isPublic);
       setState(prev => ({ ...prev, phase: 'Lobby', players: players.map(p => ({ ...p, isBot: p.isBot || false, hand: [], tricks: [], points: 0, team: 'Unknown' })) }));
     });
 
-    socket.on('joined_room', ({ roomId, players, settings }: { roomId: string, players: any[], settings: GameSettings }) => {
+    socket.on('joined_room', ({ roomId, players, settings, hostId, isPublic }: { roomId: string, players: any[], settings: GameSettings, hostId: string, isPublic: boolean }) => {
       setRoomId(roomId);
       setStoredRoomId(roomId);
       setSettings(settings);
+      setHostId(hostId);
+      setIsPublic(isPublic);
       setState(prev => ({ ...prev, phase: 'Lobby', players: players.map(p => ({ ...p, isBot: p.isBot || false, hand: [], tricks: [], points: 0, team: 'Unknown' })) }));
     });
 
     socket.on('player_joined', (players: any[]) => {
       setState(prev => ({ ...prev, players: players.map(p => ({ ...p, isBot: p.isBot || false, hand: [], tricks: [], points: 0, team: 'Unknown' })) }));
+    });
+
+    socket.on('room_update', (data: { hostId?: string, isPublic?: boolean }) => {
+        if (data.hostId) setHostId(data.hostId);
+        if (data.isPublic !== undefined) setIsPublic(data.isPublic);
+    });
+
+    socket.on('kicked', () => {
+        alert('Du wurdest aus dem Raum entfernt.');
+        setRoomId(null);
+        setStoredRoomId(null);
+        setHostId(null);
+        setState(prev => ({ ...initialGameState, phase: 'MainMenu' }));
+    });
+
+    socket.on('public_rooms_list', (rooms: PublicRoom[]) => {
+        setPublicRooms(rooms);
     });
 
     socket.on('game_started', (gameState: GameState) => {
@@ -112,6 +148,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       socket.off('room_created');
       socket.off('joined_room');
       socket.off('player_joined');
+      socket.off('room_update');
+      socket.off('kicked');
+      socket.off('public_rooms_list');
       socket.off('game_started');
       socket.off('game_state_update');
       socket.off('error');
@@ -157,16 +196,13 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         socket.emit('leave_room', { roomId });
         setStoredRoomId(null);
         setRoomId(null);
+        setHostId(null);
     }
     setState(prev => ({ ...prev, phase: 'MainMenu', lastActivePhase: prev.phase as any }));
   }, [roomId]);
 
   const openSettings = useCallback(() => {
     // Settings are now mostly for game rules which are set on server side by default.
-    // We can keep this empty or remove it. Keeping it to satisfy interface for now, or just setting phase if we kept a view.
-    // But since we removed SettingsScreen, maybe we don't need this.
-    // However, MainMenu.tsx still had openSettings destructured (before I removed it).
-    // Let's just do nothing or maybe log.
   }, []);
 
   const closeSettings = useCallback(() => {
@@ -193,8 +229,45 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (roomId) socket.emit('add_bot', roomId);
   };
 
+  const togglePublic = useCallback(() => {
+      if (roomId) socket.emit('toggle_public', { roomId });
+  }, [roomId]);
+
+  const kickPlayer = useCallback((targetId: string) => {
+      if (roomId) socket.emit('kick_player', { roomId, targetId });
+  }, [roomId]);
+
+  const refreshPublicRooms = useCallback(() => {
+      if (!socket.connected) socket.connect();
+      socket.emit('get_public_rooms');
+  }, []);
+
   return (
-    <GameContext.Provider value={{ state, settings, roomId, playerId, playCard, submitBid, announceReKontra, startNewGame, resumeGame, goToMainMenu, setSettings, openSettings, closeSettings, joinGame, createGame, startGameMultiplayer, addBotMultiplayer }}>
+    <GameContext.Provider value={{
+        state,
+        settings,
+        roomId,
+        hostId,
+        isPublic,
+        publicRooms,
+        playerId,
+        playCard,
+        submitBid,
+        announceReKontra,
+        startNewGame,
+        resumeGame,
+        goToMainMenu,
+        setSettings,
+        openSettings,
+        closeSettings,
+        joinGame,
+        createGame,
+        startGameMultiplayer,
+        addBotMultiplayer,
+        togglePublic,
+        kickPlayer,
+        refreshPublicRooms
+    }}>
       {children}
     </GameContext.Provider>
   );

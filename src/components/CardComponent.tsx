@@ -33,9 +33,15 @@ export const CardComponent = memo<CardComponentProps>(({ card, onClick, classNam
   };
   return (
     <div className={`card ${isRed ? 'red' : 'black'} ${className || ''} ${disabled ? 'disabled' : ''}`} onClick={handleClick}>
-      <div className="card-corner top">{valueSymbols[card.value]}</div>
+      <div className="card-corner top">
+        <div>{valueSymbols[card.value]}</div>
+        <div className="corner-suit">{suitSymbols[card.suit]}</div>
+      </div>
       <div className="card-center">{suitSymbols[card.suit]}</div>
-      <div className="card-corner bottom">{valueSymbols[card.value]}</div>
+      <div className="card-corner bottom">
+        <div>{valueSymbols[card.value]}</div>
+        <div className="corner-suit">{suitSymbols[card.suit]}</div>
+      </div>
     </div>
   );
 });

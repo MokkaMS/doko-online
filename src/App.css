@@ -67,7 +67,16 @@ body { margin: 0; padding: 0; background-color: #0d4d1a; color: white; font-fami
 .card.disabled { opacity: 0.6; cursor: not-allowed; pointer-events: none; }
 .card.selected { transform: translateY(-30px); border: 2px solid #ffeb3b; z-index: 120 !important; }
 
-.card-corner { font-size: 18px; font-weight: bold; line-height: 1; }
+.card-corner {
+  font-size: 18px;
+  font-weight: bold;
+  line-height: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  align-self: flex-start;
+}
 .card-corner.bottom { align-self: flex-end; transform: rotate(180deg); }
 .card-center { font-size: 40px; text-align: center; flex: 1; display: flex; align-items: center; justify-content: center; }
 
@@ -81,6 +90,7 @@ body { margin: 0; padding: 0; background-color: #0d4d1a; color: white; font-fami
 .trick-card-wrapper { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 5px; z-index: 20; transition: all 1.5s ease-in-out; }
 .trick-card { width: 85px; height: 125px; transform: none !important; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
 .trick-card .card-center { font-size: 32px; }
+.trick-card .card-corner { font-size: 15px; }
 
 .tcc-0 { bottom: 140px; left: 50%; transform: translateX(-50%); animation: p0In 0.4s ease-out; }
 .tcc-1 { left: 160px; top: 50%; transform: translateY(-50%); animation: p1In 0.4s ease-out; }

@@ -5,7 +5,7 @@ import { sortCards } from '../logic/cardUtils';
 import { CardComponent } from './CardComponent';
 
 export const GameTable: React.FC = () => {
-  const { state, playCard, submitBid, announceReKontra, settings, goToMainMenu, playerId, startNewGame } = useGame();
+  const { state, playCard, submitBid, announceReKontra, settings, goToMainMenu, playerId, startNewGame, reconnect } = useGame();
   const [showFarbenSoloSelection, setShowFarbenSoloSelection] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const processingRef = useRef(false);
@@ -254,6 +254,7 @@ export const GameTable: React.FC = () => {
 
         <div className="controls">
           <button onClick={goToMainMenu}>Hauptmenü</button>
+          <button onClick={reconnect} style={{ marginLeft: '10px', backgroundColor: '#555' }}>Reconnect</button>
         </div>
 
         {state.phase === 'Scoring' && state.lastGameResult && (

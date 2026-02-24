@@ -23,6 +23,7 @@ interface GameContextType {
   announceReKontra: (playerId: string, type: 'Re' | 'Kontra') => void;
   startNewGame: () => void;
   resumeGame: () => void;
+  reconnect: () => void;
   goToMainMenu: () => void;
   setSettings: (settings: GameSettings) => void;
   openSettings: () => void;
@@ -75,6 +76,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isPublic, setIsPublic] = useState<boolean>(false);
   const [publicRooms, setPublicRooms] = useState<PublicRoom[]>([]);
   const [playerId] = useState<string>(() => getStoredPlayerId());
+  const [lastRoomId, setLastRoomId] = useState<string | null>(null);
 
   useEffect(() => {
     socket.connect();
@@ -199,16 +201,23 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
   
   const resumeGame = useCallback(() => {
-    const storedRoomId = getStoredRoomId();
-    if (storedRoomId && playerId) {
+    const roomIdToUse = getStoredRoomId() || lastRoomId;
+    if (roomIdToUse && playerId) {
         // Attempt reconnection
         if (!socket.connected) socket.connect();
-        socket.emit('join_room', { roomId: storedRoomId, playerName: 'Resuming Player', playerId });
+        socket.emit('join_room', { roomId: roomIdToUse, playerName: 'Resuming Player', playerId });
+        setStoredRoomId(roomIdToUse);
     }
-  }, [playerId]);
+  }, [playerId, lastRoomId]);
+
+  const reconnect = useCallback(() => {
+      socket.disconnect();
+      socket.connect();
+  }, []);
 
   const goToMainMenu = useCallback(() => {
     if (roomId) {
+        setLastRoomId(roomId);
         socket.emit('leave_room', { roomId });
         setStoredRoomId(null);
         setRoomId(null);
@@ -272,6 +281,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         announceReKontra,
         startNewGame,
         resumeGame,
+        reconnect,
         goToMainMenu,
         setSettings,
         openSettings,

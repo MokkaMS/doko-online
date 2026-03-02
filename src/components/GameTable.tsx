@@ -3,6 +3,7 @@ import { useGame } from '../context/GameContext';
 import { Card, Suit, CardValue } from '../logic/types';
 import { sortCards } from '../logic/cardUtils';
 import { CardComponent } from './CardComponent';
+import { TRICK_ANIMATION_STEP1_MS, TRICK_ANIMATION_STEP2_MS, PLAY_CARD_SAFETY_TIMEOUT_MS } from '../config/constants';
 
 export const GameTable: React.FC = () => {
   const { state, playCard, submitBid, announceReKontra, settings, goToMainMenu, playerId, startNewGame, reconnect } = useGame();
@@ -35,14 +36,14 @@ export const GameTable: React.FC = () => {
 
     if (state.currentTrick.length === 4) {
       setTrickAnimationPhase('waiting');
-      // Step 1: Wait 800ms (cards on table)
+      // Step 1: Wait (cards on table)
       timer1 = setTimeout(() => {
         setTrickAnimationPhase('center');
-        // Step 2: Move to center (wait 1.2s total: 1.0s transition + 0.2s pause)
+        // Step 2: Move to center
         timer2 = setTimeout(() => {
           setTrickAnimationPhase('winner');
-        }, 1200);
-      }, 800);
+        }, TRICK_ANIMATION_STEP2_MS);
+      }, TRICK_ANIMATION_STEP1_MS);
     } else {
       setTrickAnimationPhase('idle');
     }
@@ -88,7 +89,7 @@ export const GameTable: React.FC = () => {
                   processingRef.current = false;
                   setIsProcessing(false);
               }
-          }, 2000);
+          }, PLAY_CARD_SAFETY_TIMEOUT_MS);
       } else {
           setSelectedCardId(card.id);
       }

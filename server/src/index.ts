@@ -6,7 +6,7 @@ import cors from 'cors';
 import { GameEngine } from './logic/GameEngine';
 import { GameState, Card, GameSettings, GameType, Suit, CardValue } from './logic/types';
 import { Bot } from './logic/Bot';
-import { validatePlayerName } from './utils/validation';
+import { validatePlayerName, validateRoomId, validatePlayerId } from './utils/validation';
 
 const app = express();
 
@@ -265,6 +265,19 @@ io.on('connection', (socket: Socket) => {
 
   socket.on('create_room', ({ playerName, playerId }: { playerName: string, playerId: string }) => {
     console.log(`[create_room] Request from ${playerName} (${playerId})`);
+
+    const nameError = validatePlayerName(playerName);
+    if (nameError) {
+      socket.emit('error', nameError);
+      return;
+    }
+
+    const idError = validatePlayerId(playerId);
+    if (idError) {
+      socket.emit('error', idError);
+      return;
+    }
+
     // 1. Check Global Limit
     if (Object.keys(rooms).length >= MAX_ROOMS) {
       socket.emit('error', 'Server is full (max 100 rooms)');
@@ -323,6 +336,12 @@ io.on('connection', (socket: Socket) => {
   });
 
   socket.on('leave_room', ({ roomId }: { roomId: string }) => {
+    const roomIdError = validateRoomId(roomId);
+    if (roomIdError) {
+      socket.emit('error', roomIdError);
+      return;
+    }
+
     const room = rooms[roomId];
     if (room) {
         const player = room.players.find(p => p.socketId === socket.id);
@@ -365,11 +384,25 @@ io.on('connection', (socket: Socket) => {
 
   socket.on('join_room', ({ roomId, playerName, playerId }: { roomId: string, playerName: string, playerId: string }) => {
     console.log(`[join_room] Request from ${playerName} (${playerId}) to join ${roomId}`);
-    const error = validatePlayerName(playerName);
-    if (error) {
-      socket.emit('error', error);
+
+    const nameError = validatePlayerName(playerName);
+    if (nameError) {
+      socket.emit('error', nameError);
       return;
     }
+
+    const idError = validatePlayerId(playerId);
+    if (idError) {
+      socket.emit('error', idError);
+      return;
+    }
+
+    const roomIdError = validateRoomId(roomId);
+    if (roomIdError) {
+      socket.emit('error', roomIdError);
+      return;
+    }
+
     const room = rooms[roomId];
     if (room && typeof room !== 'function') {
       const existingPlayer = room.players.find(p => p.id === playerId);
@@ -432,6 +465,12 @@ io.on('connection', (socket: Socket) => {
   });
 
   socket.on('add_bot', (roomId: string) => {
+    const roomIdError = validateRoomId(roomId);
+    if (roomIdError) {
+      socket.emit('error', roomIdError);
+      return;
+    }
+
     const room = rooms[roomId];
     if (room) {
         // Validate host
@@ -457,6 +496,12 @@ io.on('connection', (socket: Socket) => {
   });
 
   socket.on('start_game', (roomId: string) => {
+    const roomIdError = validateRoomId(roomId);
+    if (roomIdError) {
+      socket.emit('error', roomIdError);
+      return;
+    }
+
     const room = rooms[roomId];
     if (room) {
       // Validate host
@@ -527,6 +572,12 @@ io.on('connection', (socket: Socket) => {
   });
 
   socket.on('toggle_public', ({ roomId }: { roomId: string }) => {
+    const roomIdError = validateRoomId(roomId);
+    if (roomIdError) {
+      socket.emit('error', roomIdError);
+      return;
+    }
+
     const room = rooms[roomId];
     if (room) {
        const player = room.players.find(p => p.socketId === socket.id);
@@ -544,6 +595,18 @@ io.on('connection', (socket: Socket) => {
   });
 
   socket.on('kick_player', ({ roomId, targetId }: { roomId: string, targetId: string }) => {
+    const roomIdError = validateRoomId(roomId);
+    if (roomIdError) {
+      socket.emit('error', roomIdError);
+      return;
+    }
+
+    const targetIdError = validatePlayerId(targetId);
+    if (targetIdError) {
+      socket.emit('error', targetIdError);
+      return;
+    }
+
     const room = rooms[roomId];
     if (!room) return;
 
@@ -684,6 +747,12 @@ io.on('connection', (socket: Socket) => {
   };
 
   socket.on('play_card', ({ roomId, card }: { roomId: string, card: Card }) => {
+      const roomIdError = validateRoomId(roomId);
+      if (roomIdError) {
+        socket.emit('error', roomIdError);
+        return;
+      }
+
       // Find player by socket.id
       const room = rooms[roomId];
       if (room) {
@@ -695,6 +764,12 @@ io.on('connection', (socket: Socket) => {
   });
 
   socket.on('submit_bid', ({ roomId, bid }: { roomId: string, bid: string }) => {
+      const roomIdError = validateRoomId(roomId);
+      if (roomIdError) {
+        socket.emit('error', roomIdError);
+        return;
+      }
+
       const room = rooms[roomId];
       if (room) {
           const player = room.players.find(p => p.socketId === socket.id);
@@ -706,6 +781,12 @@ io.on('connection', (socket: Socket) => {
 
   
   socket.on('announce_rekontra', ({ roomId, type }: { roomId: string, type: 'Re' | 'Kontra' }) => {
+       const roomIdError = validateRoomId(roomId);
+       if (roomIdError) {
+         socket.emit('error', roomIdError);
+         return;
+       }
+
        const room = rooms[roomId];
        if (!room || !room.gameState) return;
        const state = room.gameState;

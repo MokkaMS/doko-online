@@ -6,7 +6,7 @@ import cors from 'cors';
 import { GameEngine } from './logic/GameEngine';
 import { GameState, Card, GameSettings, GameType, Suit, CardValue } from './logic/types';
 import { Bot } from './logic/Bot';
-import { validatePlayerName } from './utils/validation';
+import { validatePlayerName, validateRoomId, validatePlayerId } from './utils/validation';
 import {
   MAX_ROOMS,
   CREATE_ROOM_RATE_LIMIT,
@@ -59,10 +59,19 @@ interface Room {
 }
 
 const rooms: Record<string, Room> = Object.create(null);
+const socketToPlayerMap = new Map<string, { roomId: string, playerId: string }>();
 const disconnectTimeouts = new Map<string, NodeJS.Timeout>();
 
 const lastRoomCreation: Map<string, number> = new Map();
 const lastPlayerActionTime: Map<string, number> = new Map();
+
+const addPlayerToMap = (socketId: string, roomId: string, playerId: string) => {
+  socketToPlayerMap.set(socketId, { roomId, playerId });
+};
+
+const removePlayerFromMap = (socketId: string) => {
+  socketToPlayerMap.delete(socketId);
+};
 
 // Helper to generate room ID
 const generateRoomId = () => {
@@ -269,6 +278,19 @@ io.on('connection', (socket: Socket) => {
 
   socket.on('create_room', ({ playerName, playerId }: { playerName: string, playerId: string }) => {
     console.log(`[create_room] Request from ${playerName} (${playerId})`);
+
+    const nameError = validatePlayerName(playerName);
+    if (nameError) {
+      socket.emit('error', nameError);
+      return;
+    }
+
+    const idError = validatePlayerId(playerId);
+    if (idError) {
+      socket.emit('error', idError);
+      return;
+    }
+
     // 1. Check Global Limit
     if (Object.keys(rooms).length >= MAX_ROOMS) {
       socket.emit('error', `Server is full (max ${MAX_ROOMS} rooms)`);
@@ -284,14 +306,7 @@ io.on('connection', (socket: Socket) => {
     }
 
     // 3. Check if already in a room
-    let alreadyInRoom = false;
-    for (const rid in rooms) {
-      if (rooms[rid].players.some(p => p.socketId === socket.id)) {
-        alreadyInRoom = true;
-        break;
-      }
-    }
-    if (alreadyInRoom) {
+    if (socketToPlayerMap.has(socket.id)) {
       socket.emit('error', 'You are already in a room.');
       return;
     }
@@ -314,6 +329,7 @@ io.on('connection', (socket: Socket) => {
       hostId: playerId,
       isPublic: false
     };
+    addPlayerToMap(socket.id, roomId, playerId);
     socket.join(roomId);
     socket.emit('room_created', {
         roomId,
@@ -327,6 +343,12 @@ io.on('connection', (socket: Socket) => {
   });
 
   socket.on('leave_room', ({ roomId }: { roomId: string }) => {
+    const roomIdError = validateRoomId(roomId);
+    if (roomIdError) {
+      socket.emit('error', roomIdError);
+      return;
+    }
+
     const room = rooms[roomId];
     if (room) {
         const player = room.players.find(p => p.socketId === socket.id);
@@ -336,6 +358,7 @@ io.on('connection', (socket: Socket) => {
             if (idx !== -1) {
                 room.players.splice(idx, 1);
             }
+            removePlayerFromMap(socket.id);
 
             // Clear disconnect timeout if exists
             const timer = disconnectTimeouts.get(player.id);
@@ -369,19 +392,36 @@ io.on('connection', (socket: Socket) => {
 
   socket.on('join_room', ({ roomId, playerName, playerId }: { roomId: string, playerName: string, playerId: string }) => {
     console.log(`[join_room] Request from ${playerName} (${playerId}) to join ${roomId}`);
-    const error = validatePlayerName(playerName);
-    if (error) {
-      socket.emit('error', error);
+
+    const nameError = validatePlayerName(playerName);
+    if (nameError) {
+      socket.emit('error', nameError);
       return;
     }
+
+    const idError = validatePlayerId(playerId);
+    if (idError) {
+      socket.emit('error', idError);
+      return;
+    }
+
+    const roomIdError = validateRoomId(roomId);
+    if (roomIdError) {
+      socket.emit('error', roomIdError);
+      return;
+    }
+
     const room = rooms[roomId];
     if (room && typeof room !== 'function') {
       const existingPlayer = room.players.find(p => p.id === playerId);
       if (existingPlayer) {
           // Reconnection logic
+          const oldSocketId = existingPlayer.socketId;
+          if (oldSocketId) removePlayerFromMap(oldSocketId);
           existingPlayer.socketId = socket.id;
           existingPlayer.connected = true;
           delete existingPlayer.disconnectTime;
+          addPlayerToMap(socket.id, roomId, playerId);
 
           const timer = disconnectTimeouts.get(playerId);
           if (timer) {
@@ -416,6 +456,7 @@ io.on('connection', (socket: Socket) => {
               ready: true,
               connected: true
           });
+          addPlayerToMap(socket.id, roomId, playerId);
           socket.join(roomId);
           console.log(`[join_room] ${playerName} joined ${roomId}. Players: ${room.players.map(p => p.name).join(', ')}`);
 
@@ -436,6 +477,12 @@ io.on('connection', (socket: Socket) => {
   });
 
   socket.on('add_bot', (roomId: string) => {
+    const roomIdError = validateRoomId(roomId);
+    if (roomIdError) {
+      socket.emit('error', roomIdError);
+      return;
+    }
+
     const room = rooms[roomId];
     if (room) {
         // Validate host
@@ -461,6 +508,12 @@ io.on('connection', (socket: Socket) => {
   });
 
   socket.on('start_game', (roomId: string) => {
+    const roomIdError = validateRoomId(roomId);
+    if (roomIdError) {
+      socket.emit('error', roomIdError);
+      return;
+    }
+
     const room = rooms[roomId];
     if (room) {
       // Validate host
@@ -531,6 +584,12 @@ io.on('connection', (socket: Socket) => {
   });
 
   socket.on('toggle_public', ({ roomId }: { roomId: string }) => {
+    const roomIdError = validateRoomId(roomId);
+    if (roomIdError) {
+      socket.emit('error', roomIdError);
+      return;
+    }
+
     const room = rooms[roomId];
     if (room) {
        const player = room.players.find(p => p.socketId === socket.id);
@@ -548,6 +607,18 @@ io.on('connection', (socket: Socket) => {
   });
 
   socket.on('kick_player', ({ roomId, targetId }: { roomId: string, targetId: string }) => {
+    const roomIdError = validateRoomId(roomId);
+    if (roomIdError) {
+      socket.emit('error', roomIdError);
+      return;
+    }
+
+    const targetIdError = validatePlayerId(targetId);
+    if (targetIdError) {
+      socket.emit('error', targetIdError);
+      return;
+    }
+
     const room = rooms[roomId];
     if (!room) return;
 
@@ -580,6 +651,7 @@ io.on('connection', (socket: Socket) => {
             room.players.splice(idx, 1);
             // Notify the kicked player
             if (targetPlayer.socketId) {
+                removePlayerFromMap(targetPlayer.socketId);
                 io.to(targetPlayer.socketId).emit('kicked');
                 // Force disconnect logic
                 const socketToKick = io.sockets.sockets.get(targetPlayer.socketId);
@@ -688,6 +760,12 @@ io.on('connection', (socket: Socket) => {
   };
 
   socket.on('play_card', ({ roomId, card }: { roomId: string, card: Card }) => {
+      const roomIdError = validateRoomId(roomId);
+      if (roomIdError) {
+        socket.emit('error', roomIdError);
+        return;
+      }
+
       // Find player by socket.id
       const room = rooms[roomId];
       if (room) {
@@ -699,6 +777,12 @@ io.on('connection', (socket: Socket) => {
   });
 
   socket.on('submit_bid', ({ roomId, bid }: { roomId: string, bid: string }) => {
+      const roomIdError = validateRoomId(roomId);
+      if (roomIdError) {
+        socket.emit('error', roomIdError);
+        return;
+      }
+
       const room = rooms[roomId];
       if (room) {
           const player = room.players.find(p => p.socketId === socket.id);
@@ -710,6 +794,12 @@ io.on('connection', (socket: Socket) => {
 
   
   socket.on('announce_rekontra', ({ roomId, type }: { roomId: string, type: 'Re' | 'Kontra' }) => {
+       const roomIdError = validateRoomId(roomId);
+       if (roomIdError) {
+         socket.emit('error', roomIdError);
+         return;
+       }
+
        const room = rooms[roomId];
        if (!room || !room.gameState) return;
        const state = room.gameState;
@@ -751,10 +841,12 @@ io.on('connection', (socket: Socket) => {
 
     // Remove player from room? 
     // Mark as disconnected.
-    for (const roomId in rooms) {
+    const mapping = socketToPlayerMap.get(socket.id);
+    if (mapping) {
+        const { roomId, playerId } = mapping;
         const room = rooms[roomId];
-        const player = room.players.find(p => p.socketId === socket.id);
-        if (player) {
+        const player = room?.players.find(p => p.id === playerId);
+        if (player && player.socketId === socket.id) {
             player.connected = false;
             player.disconnectTime = Date.now();
 
@@ -784,6 +876,7 @@ io.on('connection', (socket: Socket) => {
                 if (p && !p.connected) {
                     const idx = currentRoom.players.indexOf(p);
                     if (idx !== -1) {
+                        if (p.socketId) removePlayerFromMap(p.socketId);
                         currentRoom.players.splice(idx, 1);
                         io.to(roomId).emit('player_left', currentRoom.players);
 

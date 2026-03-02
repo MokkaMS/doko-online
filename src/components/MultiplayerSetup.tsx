@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
 import { getStoredPlayerName } from '../utils/storage';
+import './MultiplayerSetup.css';
 
 export const MultiplayerSetup: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const { joinGame, createGame, publicRooms, refreshPublicRooms } = useGame();
@@ -20,67 +21,44 @@ export const MultiplayerSetup: React.FC<{ onBack: () => void }> = ({ onBack }) =
   }, []);
 
   return (
-    <div className="game-container main-menu" style={{overflowY: 'auto', maxHeight: '100vh'}}>
+    <div className="game-container main-menu multiplayer-container">
       <h1 className="menu-title">SPIELEN</h1>
       <div className="settings-box">
         <div className="settings-grid">
-           <label>Dein Name: <input value={name} onChange={e => setName(e.target.value)} style={{backgroundColor: 'white', color:'black', marginLeft:'10px', padding:'5px', fontSize:'18px'}}/></label>
+           <label>Dein Name: <input value={name} onChange={e => setName(e.target.value)} className="name-input"/></label>
         </div>
-        <div className="menu-content" style={{gap: '15px', marginTop: '20px'}}>
+        <div className="menu-content setup-menu-content">
             <button className="menu-button" onClick={handleCreate}>Neues Spiel erstellen</button>
             
-            <div style={{display:'flex', gap:'10px', alignItems:'center', justifyContent:'center'}}>
-                <input placeholder="Raum ID" value={roomId} onChange={e => setRoomId(e.target.value)} style={{backgroundColor: 'white', color: 'black', padding:'10px', fontSize:'18px', borderRadius:'8px', border:'none', width:'120px'}}/>
+            <div className="join-row">
+                <input placeholder="Raum ID" value={roomId} onChange={e => setRoomId(e.target.value)} className="room-id-input"/>
                 <button className="menu-button" onClick={handleJoin}>Beitreten</button>
             </div>
 
             {/* Public Rooms Section */}
-            <div style={{marginTop: '30px', borderTop: '1px solid #555', paddingTop: '20px', width: '100%'}}>
-                <h3 style={{marginBottom: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+            <div className="public-rooms-section">
+                <h3 className="public-rooms-header">
                     Öffentliche Räume
-                    <button
-                        onClick={refreshPublicRooms}
-                        style={{
-                            background: 'transparent',
-                            border: '1px solid #aaa',
-                            color: '#aaa',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            fontSize: '0.8em',
-                            padding: '4px 8px'
-                        }}
-                    >
-                        ↻
-                    </button>
+                    <button onClick={refreshPublicRooms} className="refresh-btn">↻</button>
                 </h3>
 
                 {publicRooms.length === 0 ? (
-                    <div style={{color: '#888', fontStyle: 'italic'}}>Keine öffentlichen Räume gefunden.</div>
+                    <div className="no-rooms">Keine öffentlichen Räume gefunden.</div>
                 ) : (
-                    <div style={{display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '200px', overflowY: 'auto'}}>
+                    <div className="rooms-list">
                         {publicRooms.map(room => (
                             <div
                                 key={room.id}
                                 onClick={() => {
                                     setRoomId(room.id);
-                                    // Optional: Auto join if needed, but manual join is safer to confirm name
                                 }}
-                                style={{
-                                    background: '#333',
-                                    padding: '10px',
-                                    borderRadius: '8px',
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'center',
-                                    border: roomId === room.id ? '2px solid #4caf50' : '1px solid #444'
-                                }}
+                                className={`room-item ${roomId === room.id ? 'selected' : ''}`}
                             >
                                 <div>
-                                    <span style={{fontWeight: 'bold', color: '#ffeb3b'}}>{room.id}</span>
-                                    <span style={{marginLeft: '10px', color: '#ccc'}}>Host: {room.hostName}</span>
+                                    <span className="room-id-text">{room.id}</span>
+                                    <span className="room-host-text">Host: {room.hostName}</span>
                                 </div>
-                                <div style={{color: room.playerCount >= 4 ? '#ff6b6b' : '#4caf50'}}>
+                                <div className={`player-count ${room.playerCount >= 4 ? 'full' : ''}`}>
                                     {room.playerCount}/4
                                 </div>
                             </div>
@@ -89,7 +67,7 @@ export const MultiplayerSetup: React.FC<{ onBack: () => void }> = ({ onBack }) =
                 )}
             </div>
 
-            <button className="menu-button" onClick={onBack} style={{marginTop:'20px', background:'#555'}}>Zurück</button>
+            <button className="menu-button back-btn" onClick={onBack}>Zurück</button>
         </div>
       </div>
     </div>

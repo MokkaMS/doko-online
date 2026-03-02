@@ -7,6 +7,15 @@ import { GameEngine } from './logic/GameEngine';
 import { GameState, Card, GameSettings, GameType, Suit, CardValue } from './logic/types';
 import { Bot } from './logic/Bot';
 import { validatePlayerName } from './utils/validation';
+import {
+  MAX_ROOMS,
+  CREATE_ROOM_RATE_LIMIT,
+  BOT_TURN_DELAY_MS,
+  BOT_BID_DELAY_MS,
+  TRICK_EVALUATION_DELAY_MS,
+  PLAYER_ACTION_DEBOUNCE_MS,
+  DISCONNECT_TIMEOUT_MS
+} from './config/constants';
 
 const app = express();
 
@@ -52,11 +61,6 @@ interface Room {
 const rooms: Record<string, Room> = Object.create(null);
 const disconnectTimeouts = new Map<string, NodeJS.Timeout>();
 
-const MAX_ROOMS = 100;
-const CREATE_ROOM_RATE_LIMIT = 2000; // 2 seconds
-const BOT_TURN_DELAY_MS = 1000;
-const BOT_BID_DELAY_MS = 500;
-const TRICK_EVALUATION_DELAY_MS = 3500;
 const lastRoomCreation: Map<string, number> = new Map();
 const lastPlayerActionTime: Map<string, number> = new Map();
 
@@ -148,7 +152,7 @@ const executePlayCard = (roomId: string, playerId: string, card: Card) => {
   // Debounce player actions
   const now = Date.now();
   const lastTime = lastPlayerActionTime.get(playerId);
-  if (lastTime && (now - lastTime) < 500) {
+  if (lastTime && (now - lastTime) < PLAYER_ACTION_DEBOUNCE_MS) {
     return;
   }
   lastPlayerActionTime.set(playerId, now);
@@ -267,7 +271,7 @@ io.on('connection', (socket: Socket) => {
     console.log(`[create_room] Request from ${playerName} (${playerId})`);
     // 1. Check Global Limit
     if (Object.keys(rooms).length >= MAX_ROOMS) {
-      socket.emit('error', 'Server is full (max 100 rooms)');
+      socket.emit('error', `Server is full (max ${MAX_ROOMS} rooms)`);
       return;
     }
 
@@ -799,7 +803,7 @@ io.on('connection', (socket: Socket) => {
                     }
                 }
                 disconnectTimeouts.delete(player.id);
-            }, 120000); // 120s
+            }, DISCONNECT_TIMEOUT_MS);
 
             disconnectTimeouts.set(player.id, timer);
             break;

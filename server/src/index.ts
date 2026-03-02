@@ -44,13 +44,13 @@ const io = new Server(server, {
 interface Room {
   id: string;
   players: {
-      id: string;
-      name: string;
-      socketId: string;
-      ready: boolean;
-      isBot?: boolean;
-      connected: boolean;
-      disconnectTime?: number;
+    id: string;
+    name: string;
+    socketId: string;
+    ready: boolean;
+    isBot?: boolean;
+    connected: boolean;
+    disconnectTime?: number;
   }[];
   gameState: GameState | null;
   settings: GameSettings;
@@ -108,11 +108,11 @@ const emitToRoom = (roomId: string, event: string, state: GameState) => {
 
   // Sync connection status to state players
   state.players.forEach(gp => {
-      const rp = room.players.find(rp => rp.id === gp.id);
-      if (rp) {
-          gp.connected = rp.connected;
-          gp.disconnectTime = rp.disconnectTime;
-      }
+    const rp = room.players.find(rp => rp.id === gp.id);
+    if (rp) {
+      gp.connected = rp.connected;
+      gp.disconnectTime = rp.disconnectTime;
+    }
   });
 
   room.players.forEach(p => {
@@ -188,10 +188,10 @@ const executePlayCard = (roomId: string, playerId: string, card: Card) => {
 
   const newHand = currentPlayer.hand.filter(c => c.id !== cardInHand.id);
   const newTrick = [...state.currentTrick, cardInHand];
-  
+
   // Reveal team if Kreuz-Dame is played
   if (cardInHand.suit === Suit.Kreuz && cardInHand.value === CardValue.Dame) {
-      player.isRevealed = true;
+    player.isRevealed = true;
   }
 
   GameEngine.checkAndRevealRemainingPlayers(state);
@@ -201,8 +201,8 @@ const executePlayCard = (roomId: string, playerId: string, card: Card) => {
   state.currentPlayerIndex = (currentPlayerIndex + 1) % 4;
 
   if (newTrick.length === 4) {
-      // Determine winner immediately for animation
-      state.trickWinnerIndex = GameEngine.evaluateTrick(state.currentTrick, state.trickStarterIndex, state.gameType, state.trumpSuit, room.settings);
+    // Determine winner immediately for animation
+    state.trickWinnerIndex = GameEngine.evaluateTrick(state.currentTrick, state.trickStarterIndex, state.gameType, state.trumpSuit, room.settings);
   }
 
   emitToRoom(roomId, 'game_state_update', state);
@@ -219,16 +219,16 @@ const executePlayCard = (roomId: string, playerId: string, card: Card) => {
       // Hochzeit: Find partner in first 3 tricks
       const totalTricksCompleted = state.players.reduce((sum, p) => sum + p.tricks.length, 0);
       if (state.gameType === GameType.Hochzeit && state.rePlayerIds.length === 1) {
-          const winner = state.players[winnerIndex];
-          if (totalTricksCompleted <= 3) {
-              if (!state.rePlayerIds.includes(winner.id)) {
-                  state.rePlayerIds.push(winner.id);
-                  state.kontraPlayerIds = state.kontraPlayerIds.filter(id => id !== winner.id);
-                  winner.team = 'Re';
-                  winner.isRevealed = true;
-              }
+        const winner = state.players[winnerIndex];
+        if (totalTricksCompleted <= 3) {
+          if (!state.rePlayerIds.includes(winner.id)) {
+            state.rePlayerIds.push(winner.id);
+            state.kontraPlayerIds = state.kontraPlayerIds.filter(id => id !== winner.id);
+            winner.team = 'Re';
+            winner.isRevealed = true;
           }
-          // After 3 tricks, if still alone, they stay alone (team already set to Re)
+        }
+        // After 3 tricks, if still alone, they stay alone (team already set to Re)
       }
 
       GameEngine.checkAndRevealRemainingPlayers(state);
@@ -236,12 +236,12 @@ const executePlayCard = (roomId: string, playerId: string, card: Card) => {
       // Special Points Evaluation
       const isLastTrick = state.players.every(p => p.hand.length === 0);
       const special = GameEngine.checkTrickSpecialPoints(
-          state.currentTrick,
-          winnerIndex,
-          state.trickStarterIndex,
-          state.players,
-          room.settings,
-          isLastTrick
+        state.currentTrick,
+        winnerIndex,
+        state.trickStarterIndex,
+        state.players,
+        room.settings,
+        isLastTrick
       );
       state.specialPoints.re.push(...special.re);
       state.specialPoints.kontra.push(...special.kontra);
@@ -263,7 +263,7 @@ const executePlayCard = (roomId: string, playerId: string, card: Card) => {
       }
 
       emitToRoom(roomId, 'game_state_update', state);
-      
+
       if (state.phase === 'Playing') {
         handleBotTurns(roomId);
       }
@@ -318,11 +318,11 @@ io.on('connection', (socket: Socket) => {
     rooms[roomId] = {
       id: roomId,
       players: [{
-          id: playerId,
-          name: playerName.trim(),
-          socketId: socket.id,
-          ready: true,
-          connected: true
+        id: playerId,
+        name: playerName.trim(),
+        socketId: socket.id,
+        ready: true,
+        connected: true
       }],
       gameState: null,
       settings: { ...defaultSettings },
@@ -332,11 +332,11 @@ io.on('connection', (socket: Socket) => {
     addPlayerToMap(socket.id, roomId, playerId);
     socket.join(roomId);
     socket.emit('room_created', {
-        roomId,
-        players: rooms[roomId].players,
-        settings: rooms[roomId].settings,
-        hostId: rooms[roomId].hostId,
-        isPublic: rooms[roomId].isPublic
+      roomId,
+      players: rooms[roomId].players,
+      settings: rooms[roomId].settings,
+      hostId: rooms[roomId].hostId,
+      isPublic: rooms[roomId].isPublic
     });
     io.emit('public_rooms_update', getPublicRooms());
     console.log(`[create_room] Room ${roomId} created by ${playerName}`);
@@ -351,42 +351,42 @@ io.on('connection', (socket: Socket) => {
 
     const room = rooms[roomId];
     if (room) {
-        const player = room.players.find(p => p.socketId === socket.id);
-        if (player) {
-            // Remove player
-            const idx = room.players.indexOf(player);
-            if (idx !== -1) {
-                room.players.splice(idx, 1);
-            }
-            removePlayerFromMap(socket.id);
-
-            // Clear disconnect timeout if exists
-            const timer = disconnectTimeouts.get(player.id);
-            if (timer) {
-                clearTimeout(timer);
-                disconnectTimeouts.delete(player.id);
-            }
-
-            socket.leave(roomId);
-
-            if (room.players.length === 0) {
-                delete rooms[roomId];
-            } else {
-                // Transfer host if needed
-                if (room.hostId === player.id) {
-                    const nextHost = room.players.find(p => !p.isBot && p.connected);
-                    if (nextHost) {
-                        room.hostId = nextHost.id;
-                        io.to(roomId).emit('room_update', { hostId: room.hostId, isPublic: room.isPublic });
-                    }
-                }
-
-                io.to(roomId).emit('player_left', room.players);
-                io.to(roomId).emit('player_joined', room.players); // Update lists
-            }
-
-            socket.emit('left_room');
+      const player = room.players.find(p => p.socketId === socket.id);
+      if (player) {
+        // Remove player
+        const idx = room.players.indexOf(player);
+        if (idx !== -1) {
+          room.players.splice(idx, 1);
         }
+        removePlayerFromMap(socket.id);
+
+        // Clear disconnect timeout if exists
+        const timer = disconnectTimeouts.get(player.id);
+        if (timer) {
+          clearTimeout(timer);
+          disconnectTimeouts.delete(player.id);
+        }
+
+        socket.leave(roomId);
+
+        if (room.players.length === 0) {
+          delete rooms[roomId];
+        } else {
+          // Transfer host if needed
+          if (room.hostId === player.id) {
+            const nextHost = room.players.find(p => !p.isBot && p.connected);
+            if (nextHost) {
+              room.hostId = nextHost.id;
+              io.to(roomId).emit('room_update', { hostId: room.hostId, isPublic: room.isPublic });
+            }
+          }
+
+          io.to(roomId).emit('player_left', room.players);
+          io.to(roomId).emit('player_joined', room.players); // Update lists
+        }
+
+        socket.emit('left_room');
+      }
     }
   });
 
@@ -413,62 +413,86 @@ io.on('connection', (socket: Socket) => {
 
     const room = rooms[roomId];
     if (room && typeof room !== 'function') {
-      const existingPlayer = room.players.find(p => p.id === playerId);
+      let existingPlayer = room.players.find(p => p.id === playerId);
+      let isReturningPlayer = false;
+
+      // If not in room.players but in gameState, treat as reconnecting to an active game
+      if (!existingPlayer && room.gameState) {
+        const playerInGame = room.gameState.players.find(p => p.id === playerId);
+        if (playerInGame) {
+          isReturningPlayer = true;
+          existingPlayer = {
+            id: playerId,
+            name: playerName.trim(),
+            socketId: socket.id,
+            ready: true,
+            connected: true
+          };
+          room.players.push(existingPlayer);
+        }
+      }
+
       if (existingPlayer) {
-          // Reconnection logic
-          const oldSocketId = existingPlayer.socketId;
-          if (oldSocketId) removePlayerFromMap(oldSocketId);
-          existingPlayer.socketId = socket.id;
-          existingPlayer.connected = true;
-          delete existingPlayer.disconnectTime;
-          addPlayerToMap(socket.id, roomId, playerId);
+        // Reconnection logic
+        const oldSocketId = existingPlayer.socketId;
+        if (oldSocketId && oldSocketId !== socket.id) {
+          removePlayerFromMap(oldSocketId);
+        }
+        existingPlayer.socketId = socket.id;
+        existingPlayer.connected = true;
+        delete existingPlayer.disconnectTime;
+        addPlayerToMap(socket.id, roomId, playerId);
 
-          const timer = disconnectTimeouts.get(playerId);
-          if (timer) {
-              clearTimeout(timer);
-              disconnectTimeouts.delete(playerId);
-          }
+        const timer = disconnectTimeouts.get(playerId);
+        if (timer) {
+          clearTimeout(timer);
+          disconnectTimeouts.delete(playerId);
+        }
 
-          socket.join(roomId);
-          io.to(roomId).emit('player_joined', room.players);
+        socket.join(roomId);
 
-          socket.emit('joined_room', {
-              roomId,
-              players: room.players,
-              settings: room.settings,
-              hostId: room.hostId,
-              isPublic: room.isPublic
-          });
-          if (room.gameState) {
-             const sanitized = sanitizeState(room.gameState, playerId);
-             socket.emit('game_state_update', sanitized);
-          }
+        io.to(roomId).emit('player_joined', room.players);
+
+        socket.emit('joined_room', {
+          roomId,
+          players: room.players,
+          settings: room.settings,
+          hostId: room.hostId,
+          isPublic: room.isPublic
+        });
+
+        if (room.gameState) {
+          const sanitized = sanitizeState(room.gameState, playerId);
+          socket.emit('game_state_update', sanitized);
+          // Inform others to sync the connection status visually
+          emitToRoom(roomId, 'game_state_update', room.gameState);
+        }
       } else {
-          // New join
-          if (room.players.length >= 4) {
-            socket.emit('error', 'Room is full');
-            return;
-          }
-          room.players.push({
-              id: playerId,
-              name: playerName.trim(),
-              socketId: socket.id,
-              ready: true,
-              connected: true
-          });
-          addPlayerToMap(socket.id, roomId, playerId);
-          socket.join(roomId);
-          console.log(`[join_room] ${playerName} joined ${roomId}. Players: ${room.players.map(p => p.name).join(', ')}`);
+        // New join
+        if (room.players.length >= 4) {
+          socket.emit('error', 'Room is full');
+          return;
+        }
+        room.players.push({
+          id: playerId,
+          name: playerName.trim(),
+          socketId: socket.id,
+          ready: true,
+          connected: true
+        });
+        addPlayerToMap(socket.id, roomId, playerId);
+        socket.join(roomId);
+        console.log(`[join_room] ${playerName} joined ${roomId}. Players: ${room.players.map(p => p.name).join(', ')}`);
 
-          io.to(roomId).emit('player_joined', room.players);
+        io.to(roomId).emit('player_joined', room.players);
 
-          socket.emit('joined_room', {
-              roomId,
-              players: room.players,
-              settings: room.settings,
-              hostId: room.hostId,
-              isPublic: room.isPublic
-          });
+        socket.emit('joined_room', {
+          roomId,
+          players: room.players,
+          settings: room.settings,
+          hostId: room.hostId,
+          isPublic: room.isPublic
+        });
       }
     } else {
       console.log(`[join_room] Room ${roomId} not found for ${playerName}`);
@@ -485,25 +509,25 @@ io.on('connection', (socket: Socket) => {
 
     const room = rooms[roomId];
     if (room) {
-        // Validate host
-        const requester = room.players.find(p => p.socketId === socket.id);
-        if (!requester || requester.id !== room.hostId) {
-            socket.emit('error', 'Only the host can add bots.');
-            return;
-        }
+      // Validate host
+      const requester = room.players.find(p => p.socketId === socket.id);
+      if (!requester || requester.id !== room.hostId) {
+        socket.emit('error', 'Only the host can add bots.');
+        return;
+      }
 
-        if (room.players.length < 4) {
-            const botId = `bot-${Math.random().toString(36).substr(2, 5)}`;
-            room.players.push({
-                id: botId,
-                name: `Bot ${room.players.length}`,
-                socketId: botId,
-                ready: true,
-                isBot: true,
-                connected: true
-            });
-            io.to(roomId).emit('player_joined', room.players);
-        }
+      if (room.players.length < 4) {
+        const botId = `bot-${Math.random().toString(36).substr(2, 5)}`;
+        room.players.push({
+          id: botId,
+          name: `Bot ${room.players.length}`,
+          socketId: botId,
+          ready: true,
+          isBot: true,
+          connected: true
+        });
+        io.to(roomId).emit('player_joined', room.players);
+      }
     }
   });
 
@@ -519,20 +543,20 @@ io.on('connection', (socket: Socket) => {
       // Validate host
       const requester = room.players.find(p => p.socketId === socket.id);
       if (!requester || requester.id !== room.hostId) {
-          socket.emit('error', 'Only the host can start the game.');
-          return;
+        socket.emit('error', 'Only the host can start the game.');
+        return;
       }
 
       // Auto-fill with bots if less than 4
       while (room.players.length < 4) {
         const botId = `bot-${Math.random().toString(36).substr(2, 5)}`;
         room.players.push({
-            id: botId,
-            name: `Bot ${room.players.length}`,
-            socketId: botId,
-            ready: true,
-            isBot: true,
-            connected: true
+          id: botId,
+          name: `Bot ${room.players.length}`,
+          socketId: botId,
+          ready: true,
+          isBot: true,
+          connected: true
         });
       }
 
@@ -540,21 +564,21 @@ io.on('connection', (socket: Socket) => {
       const playerNames = room.players.map(p => p.name);
       const initialState = GameEngine.createInitialState(playerNames, room.settings);
       initialState.phase = 'Bidding';
-      
-      initialState.players.forEach((p, idx) => {
-          const roomPlayer = room.players[idx];
-          p.id = roomPlayer.id;
-          p.isBot = !!roomPlayer.isBot;
-          p.connected = roomPlayer.connected;
-          p.disconnectTime = roomPlayer.disconnectTime;
 
-          // Preserve tournament points
-          if (previousState) {
-              const oldPlayer = previousState.players.find(op => op.id === p.id);
-              if (oldPlayer) {
-                  p.tournamentPoints = oldPlayer.tournamentPoints;
-              }
+      initialState.players.forEach((p, idx) => {
+        const roomPlayer = room.players[idx];
+        p.id = roomPlayer.id;
+        p.isBot = !!roomPlayer.isBot;
+        p.connected = roomPlayer.connected;
+        p.disconnectTime = roomPlayer.disconnectTime;
+
+        // Preserve tournament points
+        if (previousState) {
+          const oldPlayer = previousState.players.find(op => op.id === p.id);
+          if (oldPlayer) {
+            p.tournamentPoints = oldPlayer.tournamentPoints;
           }
+        }
       });
 
       const stateWithTeams = GameEngine.determineTeams(initialState);
@@ -564,21 +588,21 @@ io.on('connection', (socket: Socket) => {
       // The filter for public lobbies will check gameState === null.
 
       emitToRoom(roomId, 'game_started', stateWithTeams);
-      
+
       // If first player is a bot, start its turn
       if (initialState.phase === 'Bidding') {
-          // Bidding for bots
-          const checkBids = () => {
-              const state = room.gameState!;
-              const currentP = state.players[state.currentPlayerIndex];
-              if (currentP.isBot && state.phase === 'Bidding') {
-                  setTimeout(() => {
-                      // In index.ts, we need to handle bidding too
-                      handleBotBid(roomId);
-                  }, BOT_BID_DELAY_MS);
-              }
-          };
-          checkBids();
+        // Bidding for bots
+        const checkBids = () => {
+          const state = room.gameState!;
+          const currentP = state.players[state.currentPlayerIndex];
+          if (currentP.isBot && state.phase === 'Bidding') {
+            setTimeout(() => {
+              // In index.ts, we need to handle bidding too
+              handleBotBid(roomId);
+            }, BOT_BID_DELAY_MS);
+          }
+        };
+        checkBids();
       }
     }
   });
@@ -592,17 +616,17 @@ io.on('connection', (socket: Socket) => {
 
     const room = rooms[roomId];
     if (room) {
-       const player = room.players.find(p => p.socketId === socket.id);
-       if (player && room.hostId === player.id) {
-          room.isPublic = !room.isPublic;
-          console.log(`[toggle_public] Room ${roomId} is now ${room.isPublic ? 'Public' : 'Private'}`);
-          io.to(roomId).emit('room_update', { hostId: room.hostId, isPublic: room.isPublic });
-          io.emit('public_rooms_update', getPublicRooms());
-       } else {
-          console.log(`[toggle_public] Failed: User is not host or not in room. Host: ${room.hostId}, Requester: ${player?.id}`);
-       }
+      const player = room.players.find(p => p.socketId === socket.id);
+      if (player && room.hostId === player.id) {
+        room.isPublic = !room.isPublic;
+        console.log(`[toggle_public] Room ${roomId} is now ${room.isPublic ? 'Public' : 'Private'}`);
+        io.to(roomId).emit('room_update', { hostId: room.hostId, isPublic: room.isPublic });
+        io.emit('public_rooms_update', getPublicRooms());
+      } else {
+        console.log(`[toggle_public] Failed: User is not host or not in room. Host: ${room.hostId}, Requester: ${player?.id}`);
+      }
     } else {
-       console.log(`[toggle_public] Room ${roomId} not found`);
+      console.log(`[toggle_public] Room ${roomId} not found`);
     }
   });
 
@@ -624,44 +648,44 @@ io.on('connection', (socket: Socket) => {
 
     const requester = room.players.find(p => p.socketId === socket.id);
     if (!requester || requester.id !== room.hostId) {
-        socket.emit('error', 'Only the host can kick players.');
-        return;
+      socket.emit('error', 'Only the host can kick players.');
+      return;
     }
 
     if (targetId === requester.id) {
-        socket.emit('error', 'You cannot kick yourself.');
-        return;
+      socket.emit('error', 'You cannot kick yourself.');
+      return;
     }
 
     const targetPlayer = room.players.find(p => p.id === targetId);
     if (!targetPlayer) return;
 
     if (targetPlayer.isBot) {
-        // Remove bot
-        const idx = room.players.indexOf(targetPlayer);
-        if (idx !== -1) {
-            room.players.splice(idx, 1);
-            io.to(roomId).emit('player_left', room.players);
-            io.to(roomId).emit('player_joined', room.players);
-        }
+      // Remove bot
+      const idx = room.players.indexOf(targetPlayer);
+      if (idx !== -1) {
+        room.players.splice(idx, 1);
+        io.to(roomId).emit('player_left', room.players);
+        io.to(roomId).emit('player_joined', room.players);
+      }
     } else {
-        // Kick human
-        const idx = room.players.indexOf(targetPlayer);
-        if (idx !== -1) {
-            room.players.splice(idx, 1);
-            // Notify the kicked player
-            if (targetPlayer.socketId) {
-                removePlayerFromMap(targetPlayer.socketId);
-                io.to(targetPlayer.socketId).emit('kicked');
-                // Force disconnect logic
-                const socketToKick = io.sockets.sockets.get(targetPlayer.socketId);
-                if (socketToKick) {
-                    socketToKick.leave(roomId);
-                }
-            }
-            io.to(roomId).emit('player_left', room.players);
-            io.to(roomId).emit('player_joined', room.players);
+      // Kick human
+      const idx = room.players.indexOf(targetPlayer);
+      if (idx !== -1) {
+        room.players.splice(idx, 1);
+        // Notify the kicked player
+        if (targetPlayer.socketId) {
+          removePlayerFromMap(targetPlayer.socketId);
+          io.to(targetPlayer.socketId).emit('kicked');
+          // Force disconnect logic
+          const socketToKick = io.sockets.sockets.get(targetPlayer.socketId);
+          if (socketToKick) {
+            socketToKick.leave(roomId);
+          }
         }
+        io.to(roomId).emit('player_left', room.players);
+        io.to(roomId).emit('player_joined', room.players);
+      }
     }
   });
 
@@ -672,22 +696,22 @@ io.on('connection', (socket: Socket) => {
 
   const getPublicRooms = () => {
     return Object.values(rooms)
-        .filter(r => r.isPublic && r.gameState === null && r.players.length < 4)
-        .map(r => ({
-            id: r.id,
-            playerCount: r.players.length,
-            hostName: r.players.find(p => p.id === r.hostId)?.name || 'Unknown'
-        }));
+      .filter(r => r.isPublic && r.gameState === null && r.players.length < 4)
+      .map(r => ({
+        id: r.id,
+        playerCount: r.players.length,
+        hostName: r.players.find(p => p.id === r.hostId)?.name || 'Unknown'
+      }));
   };
 
   const handleBotBid = (roomId: string) => {
-      const room = rooms[roomId];
-      if (!room || !room.gameState || room.gameState.phase !== 'Bidding') return;
-      const state = room.gameState;
-      const currentP = state.players[state.currentPlayerIndex];
-      if (currentP.isBot) {
-          executeSubmitBid(roomId, currentP.id, 'Gesund');
-      }
+    const room = rooms[roomId];
+    if (!room || !room.gameState || room.gameState.phase !== 'Bidding') return;
+    const state = room.gameState;
+    const currentP = state.players[state.currentPlayerIndex];
+    if (currentP.isBot) {
+      executeSubmitBid(roomId, currentP.id, 'Gesund');
+    }
   };
 
   const executeSubmitBid = (roomId: string, playerId: string, bid: string) => {
@@ -708,131 +732,131 @@ io.on('connection', (socket: Socket) => {
     state.announcements[playerId] = [bid];
 
     if (Object.keys(state.announcements).length === 4) {
-        const bidsMap: Record<string, string> = {};
-        for(const pid in state.announcements) bidsMap[pid] = state.announcements[pid][0];
+      const bidsMap: Record<string, string> = {};
+      for (const pid in state.announcements) bidsMap[pid] = state.announcements[pid][0];
 
-        // Determine player order starting from Forehand (Dealer + 1)
-        const playerIdsInOrder = [];
-        let pIndex = (state.dealerIndex + 1) % 4;
-        for(let i=0; i<4; i++) {
-            playerIdsInOrder.push(state.players[pIndex].id);
-            pIndex = (pIndex + 1) % 4;
+      // Determine player order starting from Forehand (Dealer + 1)
+      const playerIdsInOrder = [];
+      let pIndex = (state.dealerIndex + 1) % 4;
+      for (let i = 0; i < 4; i++) {
+        playerIdsInOrder.push(state.players[pIndex].id);
+        pIndex = (pIndex + 1) % 4;
+      }
+
+      const { gameType: finalType, trumpSuit, soloPlayerId } = GameEngine.determineFinalGameType(bidsMap, playerIdsInOrder);
+      state.gameType = finalType;
+      state.trumpSuit = trumpSuit;
+
+      if (['DamenSolo', 'BubenSolo', 'FarbenSolo', 'Fleischlos'].includes(finalType)) {
+        // Use soloPlayerId to set teams
+        if (soloPlayerId) {
+          state.rePlayerIds = [soloPlayerId];
+          state.kontraPlayerIds = state.players.filter(p => p.id !== soloPlayerId).map(p => p.id);
+          state.players.forEach(p => {
+            p.team = p.id === soloPlayerId ? 'Re' : 'Kontra';
+            p.isRevealed = true; // Everyone knows teams in a Solo
+          });
         }
+      } else {
+        const tempState = GameEngine.determineTeams(state);
+        state.rePlayerIds = tempState.rePlayerIds;
+        state.kontraPlayerIds = tempState.kontraPlayerIds;
+        state.players = tempState.players;
 
-        const { gameType: finalType, trumpSuit, soloPlayerId } = GameEngine.determineFinalGameType(bidsMap, playerIdsInOrder);
-        state.gameType = finalType;
-        state.trumpSuit = trumpSuit;
-
-        if (['DamenSolo', 'BubenSolo', 'FarbenSolo', 'Fleischlos'].includes(finalType)) {
-             // Use soloPlayerId to set teams
-             if (soloPlayerId) {
-                 state.rePlayerIds = [soloPlayerId];
-                 state.kontraPlayerIds = state.players.filter(p => p.id !== soloPlayerId).map(p => p.id);
-                 state.players.forEach(p => {
-                     p.team = p.id === soloPlayerId ? 'Re' : 'Kontra';
-                     p.isRevealed = true; // Everyone knows teams in a Solo
-                 });
-             }
-        } else {
-             const tempState = GameEngine.determineTeams(state);
-             state.rePlayerIds = tempState.rePlayerIds;
-             state.kontraPlayerIds = tempState.kontraPlayerIds;
-             state.players = tempState.players;
-
-             if (finalType === GameType.Hochzeit) {
-                 state.players.forEach(p => {
-                     if (state.rePlayerIds.includes(p.id)) {
-                         p.isRevealed = true;
-                     }
-                 });
-             }
+        if (finalType === GameType.Hochzeit) {
+          state.players.forEach(p => {
+            if (state.rePlayerIds.includes(p.id)) {
+              p.isRevealed = true;
+            }
+          });
         }
-        state.phase = 'Playing';
-        state.currentPlayerIndex = GameEngine.determineStartingPlayerIndex(finalType, state.dealerIndex, soloPlayerId, state.players);
-        state.trickStarterIndex = state.currentPlayerIndex;
-        emitToRoom(roomId, 'game_state_update', state);
-        handleBotTurns(roomId);
+      }
+      state.phase = 'Playing';
+      state.currentPlayerIndex = GameEngine.determineStartingPlayerIndex(finalType, state.dealerIndex, soloPlayerId, state.players);
+      state.trickStarterIndex = state.currentPlayerIndex;
+      emitToRoom(roomId, 'game_state_update', state);
+      handleBotTurns(roomId);
     } else {
-        state.currentPlayerIndex = (state.currentPlayerIndex + 1) % 4;
-        emitToRoom(roomId, 'game_state_update', state);
-        if (state.phase === 'Bidding') handleBotBid(roomId);
+      state.currentPlayerIndex = (state.currentPlayerIndex + 1) % 4;
+      emitToRoom(roomId, 'game_state_update', state);
+      if (state.phase === 'Bidding') handleBotBid(roomId);
     }
   };
 
   socket.on('play_card', ({ roomId, card }: { roomId: string, card: Card }) => {
-      const roomIdError = validateRoomId(roomId);
-      if (roomIdError) {
-        socket.emit('error', roomIdError);
-        return;
-      }
+    const roomIdError = validateRoomId(roomId);
+    if (roomIdError) {
+      socket.emit('error', roomIdError);
+      return;
+    }
 
-      // Find player by socket.id
-      const room = rooms[roomId];
-      if (room) {
-          const player = room.players.find(p => p.socketId === socket.id);
-          if (player) {
-              executePlayCard(roomId, player.id, card);
-          }
+    // Find player by socket.id
+    const room = rooms[roomId];
+    if (room) {
+      const player = room.players.find(p => p.socketId === socket.id);
+      if (player) {
+        executePlayCard(roomId, player.id, card);
       }
+    }
   });
 
   socket.on('submit_bid', ({ roomId, bid }: { roomId: string, bid: string }) => {
-      const roomIdError = validateRoomId(roomId);
-      if (roomIdError) {
-        socket.emit('error', roomIdError);
-        return;
-      }
+    const roomIdError = validateRoomId(roomId);
+    if (roomIdError) {
+      socket.emit('error', roomIdError);
+      return;
+    }
 
-      const room = rooms[roomId];
-      if (room) {
-          const player = room.players.find(p => p.socketId === socket.id);
-          if (player) {
-              executeSubmitBid(roomId, player.id, bid);
-          }
+    const room = rooms[roomId];
+    if (room) {
+      const player = room.players.find(p => p.socketId === socket.id);
+      if (player) {
+        executeSubmitBid(roomId, player.id, bid);
       }
+    }
   });
 
-  
+
   socket.on('announce_rekontra', ({ roomId, type }: { roomId: string, type: 'Re' | 'Kontra' }) => {
-       const roomIdError = validateRoomId(roomId);
-       if (roomIdError) {
-         socket.emit('error', roomIdError);
-         return;
-       }
+    const roomIdError = validateRoomId(roomId);
+    if (roomIdError) {
+      socket.emit('error', roomIdError);
+      return;
+    }
 
-       const room = rooms[roomId];
-       if (!room || !room.gameState) return;
-       const state = room.gameState;
-       
-       const player = room.players.find(p => p.socketId === socket.id);
-       if (!player) return;
-       const gamePlayer = state.players.find(p => p.id === player.id);
-       if (!gamePlayer) return;
+    const room = rooms[roomId];
+    if (!room || !room.gameState) return;
+    const state = room.gameState;
 
-       // 1. Validate Team
-       if (type === 'Re' && !state.rePlayerIds.includes(player.id)) {
-           socket.emit('error', 'You can only announce Re if you are on the Re team.');
-           return;
-       }
-       if (type === 'Kontra' && !state.kontraPlayerIds.includes(player.id)) {
-           socket.emit('error', 'You can only announce Kontra if you are on the Kontra team.');
-           return;
-       }
+    const player = room.players.find(p => p.socketId === socket.id);
+    if (!player) return;
+    const gamePlayer = state.players.find(p => p.id === player.id);
+    if (!gamePlayer) return;
 
-       // 2. Validate Timing (Before playing 2nd card)
-       const initialHandSize = room.settings.mitNeunen ? 12 : 10;
-       const cardsPlayed = initialHandSize - gamePlayer.hand.length;
-       if (cardsPlayed >= 2) {
-           socket.emit('error', 'Announcements are only allowed before you play your second card.');
-           return;
-       }
+    // 1. Validate Team
+    if (type === 'Re' && !state.rePlayerIds.includes(player.id)) {
+      socket.emit('error', 'You can only announce Re if you are on the Re team.');
+      return;
+    }
+    if (type === 'Kontra' && !state.kontraPlayerIds.includes(player.id)) {
+      socket.emit('error', 'You can only announce Kontra if you are on the Kontra team.');
+      return;
+    }
 
-       state.reKontraAnnouncements[player.id] = type;
-       gamePlayer.isRevealed = true;
+    // 2. Validate Timing (Before playing 2nd card)
+    const initialHandSize = room.settings.mitNeunen ? 12 : 10;
+    const cardsPlayed = initialHandSize - gamePlayer.hand.length;
+    if (cardsPlayed >= 2) {
+      socket.emit('error', 'Announcements are only allowed before you play your second card.');
+      return;
+    }
 
-       GameEngine.checkAndRevealRemainingPlayers(state);
-       
-       emitToRoom(roomId, 'game_state_update', state);
+    state.reKontraAnnouncements[player.id] = type;
+    gamePlayer.isRevealed = true;
+
+    GameEngine.checkAndRevealRemainingPlayers(state);
+
+    emitToRoom(roomId, 'game_state_update', state);
   });
 
   socket.on('disconnect', () => {
@@ -843,63 +867,63 @@ io.on('connection', (socket: Socket) => {
     // Mark as disconnected.
     const mapping = socketToPlayerMap.get(socket.id);
     if (mapping) {
-        const { roomId, playerId } = mapping;
-        const room = rooms[roomId];
-        const player = room?.players.find(p => p.id === playerId);
-        if (player && player.socketId === socket.id) {
-            player.connected = false;
-            player.disconnectTime = Date.now();
+      const { roomId, playerId } = mapping;
+      const room = rooms[roomId];
+      const player = room?.players.find(p => p.id === playerId);
+      if (player && player.socketId === socket.id) {
+        player.connected = false;
+        player.disconnectTime = Date.now();
 
-            // Notify others
-            io.to(roomId).emit('player_joined', room.players); // Update lobby list
-            if (room.gameState) {
-                // If game active, might want to notify via game state too?
-                // emitToRoom syncs connection status.
-                emitToRoom(roomId, 'game_state_update', room.gameState);
-            }
-
-            // Transfer host immediately if host disconnected
-            if (room.hostId === player.id) {
-                const nextHost = room.players.find(p => !p.isBot && p.connected);
-                if (nextHost) {
-                    room.hostId = nextHost.id;
-                    io.to(roomId).emit('room_update', { hostId: room.hostId, isPublic: room.isPublic });
-                }
-            }
-
-            const timer = setTimeout(() => {
-                const currentRoom = rooms[roomId];
-                if (!currentRoom) return; // Room might be gone
-
-                // Re-check connection status (use id as socketId might have changed if reconnected but somehow this timer not cleared? Unlikely)
-                const p = currentRoom.players.find(pl => pl.id === player.id);
-                if (p && !p.connected) {
-                    const idx = currentRoom.players.indexOf(p);
-                    if (idx !== -1) {
-                        if (p.socketId) removePlayerFromMap(p.socketId);
-                        currentRoom.players.splice(idx, 1);
-                        io.to(roomId).emit('player_left', currentRoom.players);
-
-                        // Check empty room
-                        if (currentRoom.players.length === 0) {
-                            delete rooms[roomId];
-                        } else {
-                            // Transfer host again if needed (e.g. if the "acting host" also timed out)
-                            if (currentRoom.hostId === player.id) {
-                                const nextHost = currentRoom.players.find(pl => !pl.isBot && pl.connected);
-                                if (nextHost) {
-                                    currentRoom.hostId = nextHost.id;
-                                    io.to(roomId).emit('room_update', { hostId: currentRoom.hostId, isPublic: currentRoom.isPublic });
-                                }
-                            }
-                        }
-                    }
-                }
-                disconnectTimeouts.delete(player.id);
-            }, DISCONNECT_TIMEOUT_MS);
-
-            disconnectTimeouts.set(player.id, timer);
+        // Notify others
+        io.to(roomId).emit('player_joined', room.players); // Update lobby list
+        if (room.gameState) {
+          // If game active, might want to notify via game state too?
+          // emitToRoom syncs connection status.
+          emitToRoom(roomId, 'game_state_update', room.gameState);
         }
+
+        // Transfer host immediately if host disconnected
+        if (room.hostId === player.id) {
+          const nextHost = room.players.find(p => !p.isBot && p.connected);
+          if (nextHost) {
+            room.hostId = nextHost.id;
+            io.to(roomId).emit('room_update', { hostId: room.hostId, isPublic: room.isPublic });
+          }
+        }
+
+        const timer = setTimeout(() => {
+          const currentRoom = rooms[roomId];
+          if (!currentRoom) return; // Room might be gone
+
+          // Re-check connection status (use id as socketId might have changed if reconnected but somehow this timer not cleared? Unlikely)
+          const p = currentRoom.players.find(pl => pl.id === player.id);
+          if (p && !p.connected) {
+            const idx = currentRoom.players.indexOf(p);
+            if (idx !== -1) {
+              if (p.socketId) removePlayerFromMap(p.socketId);
+              currentRoom.players.splice(idx, 1);
+              io.to(roomId).emit('player_left', currentRoom.players);
+
+              // Check empty room
+              if (currentRoom.players.length === 0) {
+                delete rooms[roomId];
+              } else {
+                // Transfer host again if needed (e.g. if the "acting host" also timed out)
+                if (currentRoom.hostId === player.id) {
+                  const nextHost = currentRoom.players.find(pl => !pl.isBot && pl.connected);
+                  if (nextHost) {
+                    currentRoom.hostId = nextHost.id;
+                    io.to(roomId).emit('room_update', { hostId: currentRoom.hostId, isPublic: currentRoom.isPublic });
+                  }
+                }
+              }
+            }
+          }
+          disconnectTimeouts.delete(player.id);
+        }, DISCONNECT_TIMEOUT_MS);
+
+        disconnectTimeouts.set(player.id, timer);
+      }
     }
   });
 });

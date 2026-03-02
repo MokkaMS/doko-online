@@ -899,7 +899,6 @@ io.on('connection', (socket: Socket) => {
             }, DISCONNECT_TIMEOUT_MS);
 
             disconnectTimeouts.set(player.id, timer);
-            break;
         }
     }
   });

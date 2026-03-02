@@ -1,5 +1,6 @@
 import React from 'react';
 import { useGame } from '../context/GameContext';
+import { useTheme } from '../context/ThemeContext';
 import { MultiplayerSetup } from './MultiplayerSetup';
 
 interface MainMenuProps {
@@ -9,6 +10,7 @@ interface MainMenuProps {
 
 export const MainMenu: React.FC<MainMenuProps> = ({ showMultiplayer, setShowMultiplayer }) => {
   const { state, resumeGame } = useGame();
+  const { theme, toggleTheme } = useTheme();
 
   if (showMultiplayer) {
     return <MultiplayerSetup onBack={() => setShowMultiplayer(false)} />;
@@ -22,6 +24,9 @@ export const MainMenu: React.FC<MainMenuProps> = ({ showMultiplayer, setShowMult
         {state.lastActivePhase && state.lastActivePhase !== 'Scoring' && (
            <button className="menu-button" onClick={resumeGame}>Weiterspielen</button>
         )}
+        <button className="menu-button" onClick={toggleTheme}>
+          {theme === 'classic' ? 'Wechsel zu Minimal' : 'Wechsel zu Klassisch'}
+        </button>
       </div>
     </div>
   );

@@ -1,12 +1,17 @@
-const rooms: any = Object.create(null);
-console.log('rooms.toString:', rooms.toString);
-if (rooms.toString !== undefined) {
+interface Room {
+    id: string;
+}
+
+const rooms: Record<string, Room> = Object.create(null);
+
+console.log('rooms.toString:', (rooms as any).toString);
+if ((rooms as any).toString !== undefined) {
     console.error('FAIL: rooms.toString should be undefined');
     process.exit(1);
 }
 
-console.log('rooms["__proto__"]:', rooms["__proto__"]);
-if (rooms["__proto__"] !== undefined) {
+console.log('rooms["__proto__"]:', (rooms as any)["__proto__"]);
+if ((rooms as any)["__proto__"] !== undefined) {
     console.error('FAIL: rooms["__proto__"] should be undefined');
     process.exit(1);
 }

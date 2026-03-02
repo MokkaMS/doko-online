@@ -1,5 +1,6 @@
 import React, { useCallback, useMemo, useState, useLayoutEffect, useEffect, useRef } from 'react';
 import { useGame } from '../context/GameContext';
+import { useTheme } from '../context/ThemeContext';
 import { Card, Suit, CardValue } from '../logic/types';
 import { sortCards } from '../logic/cardUtils';
 import { CardComponent } from './CardComponent';
@@ -7,6 +8,7 @@ import { TRICK_ANIMATION_STEP1_MS, TRICK_ANIMATION_STEP2_MS, PLAY_CARD_SAFETY_TI
 
 export const GameTable: React.FC = () => {
   const { state, playCard, submitBid, announceReKontra, settings, goToMainMenu, playerId, startNewGame, reconnect } = useGame();
+  const { theme, toggleTheme } = useTheme();
   const [showFarbenSoloSelection, setShowFarbenSoloSelection] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const processingRef = useRef(false);
@@ -254,6 +256,9 @@ export const GameTable: React.FC = () => {
         </div>
 
         <div className="controls">
+          <button onClick={toggleTheme} style={{ marginRight: '10px', backgroundColor: '#555' }}>
+            {theme === 'classic' ? 'Minimal' : 'Klassisch'}
+          </button>
           <button onClick={goToMainMenu}>Hauptmenü</button>
           <button onClick={reconnect} style={{ marginLeft: '10px', backgroundColor: '#555' }}>Reconnect</button>
         </div>

@@ -1,6 +1,82 @@
 @import './LandscapeWarning.css';
 
-body { margin: 0; padding: 0; background-color: #0d4d1a; color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
+:root {
+  /* Classic Theme Variables */
+  --bg-color: #0d4d1a;
+  --text-color: white;
+  --font-family: 'Segoe UI', sans-serif;
+
+  --title-color: #ffeb3b;
+  --title-shadow: 0 2px 4px rgba(0,0,0,0.8);
+  --title-menu-shadow: 0 0 30px rgba(255,235,59,0.4);
+
+  --menu-bg: radial-gradient(circle, #1a5e2a 0%, #0d4d1a 100%);
+  --button-bg: #2e7d32;
+  --button-border: #ffeb3b;
+  --button-hover-bg: #388e3c;
+  --button-hover-scale: scale(1.05);
+  --button-shadow: 0 4px 10px rgba(0,0,0,0.3);
+
+  --table-bg: #1a5e2a;
+  --table-border: #2e7d32;
+  --table-shadow: 0 10px 50px rgba(0,0,0,0.6);
+
+  --player-info-bg: rgba(0,0,0,0.85);
+  --player-info-border: rgba(255,255,255,0.2);
+  --player-bottom-border: #ffeb3b;
+
+  --badge-team-bg: #388e3c;
+  --badge-rekontra-bg: #d32f2f;
+  --badge-bid-bg: #1976d2;
+  --turn-indicator-color: #ffeb3b;
+
+  --bidding-area-bg: rgba(0,0,0,0.9);
+  --bidding-area-border: #ffeb3b;
+
+  --scoring-bg: rgba(0,0,0,0.95);
+  --scoring-border: #ffeb3b;
+  --scoring-shadow: 0 0 50px rgba(0,0,0,0.8);
+}
+
+body.theme-minimal {
+  /* Minimal Theme Variables */
+  --bg-color: #1a1a1a;
+  --text-color: #f0f0f0;
+  --font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+
+  --title-color: #ffffff;
+  --title-shadow: none;
+  --title-menu-shadow: none;
+
+  --menu-bg: #1a1a1a;
+  --button-bg: #1a1a1a;
+  --button-border: #ffffff;
+  --button-hover-bg: #333333;
+  --button-hover-scale: none;
+  --button-shadow: none;
+
+  --table-bg: transparent;
+  --table-border: #444444;
+  --table-shadow: none;
+
+  --player-info-bg: #2a2a2a;
+  --player-info-border: #555555;
+  --player-bottom-border: #ffffff;
+
+  --badge-team-bg: #444444;
+  --badge-rekontra-bg: #666666;
+  --badge-bid-bg: #555555;
+  --turn-indicator-color: #ffffff;
+
+  --bidding-area-bg: #2a2a2a;
+  --bidding-area-border: #555555;
+
+  --scoring-bg: #2a2a2a;
+  --scoring-border: #555555;
+  --scoring-shadow: none;
+}
+
+body { margin: 0; padding: 0; background: var(--bg-color); color: var(--text-color); font-family: var(--font-family); overflow: hidden; }
 .game-container { display: flex; flex-direction: column; height: 100vh; width: 100vw; align-items: center; justify-content: center; position: relative; overflow: hidden; }
 
 /* Scaler Container */
@@ -12,17 +88,17 @@ body { margin: 0; padding: 0; background-color: #0d4d1a; color: white; font-fami
 }
 
 .game-header { position: absolute; top: 10px; left: 0; width: 100%; text-align: center; z-index: 10; pointer-events: none; }
-.game-status-title { font-size: 32px; color: #ffeb3b; text-shadow: 0 2px 4px rgba(0,0,0,0.8); margin: 0; }
+.game-status-title { font-size: 32px; color: var(--title-color); text-shadow: var(--title-shadow); margin: 0; }
 
 /* Main Menu */
-.main-menu { background: radial-gradient(circle, #1a5e2a 0%, #0d4d1a 100%); overflow-y: auto; }
-.menu-title { font-size: 90px; color: #ffeb3b; text-shadow: 0 0 30px rgba(255,235,59,0.4); margin-bottom: 40px; text-align: center; }
+.main-menu { background: var(--menu-bg); overflow-y: auto; width: 100vw; height: 100vh; }
+.menu-title { font-size: 90px; color: var(--title-color); text-shadow: var(--title-menu-shadow); margin-bottom: 40px; text-align: center; }
 .menu-content { display: flex; flex-direction: column; gap: 20px; align-items: center; }
-.menu-button { padding: 18px 50px; font-size: 24px; background: #2e7d32; border: 2px solid #ffeb3b; border-radius: 12px; color: white; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-.menu-button:hover { background: #388e3c; transform: scale(1.05); }
+.menu-button { padding: 18px 50px; font-size: 24px; background: var(--button-bg); border: 2px solid var(--button-border); border-radius: 12px; color: var(--text-color); cursor: pointer; transition: 0.2s; box-shadow: var(--button-shadow); }
+.menu-button:hover { background: var(--button-hover-bg); transform: var(--button-hover-scale); }
 
 /* Settings */
-.settings-box { background: #1a5e2a; padding: 30px; border-radius: 20px; border: 3px solid #ffeb3b; max-width: 600px; width: 90%; }
+.settings-box { background: var(--table-bg); padding: 30px; border-radius: 20px; border: 3px solid var(--button-border); max-width: 600px; width: 90%; }
 .settings-grid { display: grid; gap: 12px; margin: 20px 0; }
 .settings-grid label { display: flex; align-items: center; gap: 10px; font-size: 18px; cursor: pointer; }
 
@@ -30,9 +106,9 @@ body { margin: 0; padding: 0; background-color: #0d4d1a; color: white; font-fami
 .table {
   width: 850px;
   height: 550px;
-  background-color: #1a5e2a;
+  background-color: var(--table-bg);
   border-radius: 50%;
-  border: 12px solid #2e7d32;
+  border: 12px solid var(--table-border);
   position: absolute;
   top: 45%;
   left: 50%;
@@ -40,12 +116,12 @@ body { margin: 0; padding: 0; background-color: #0d4d1a; color: white; font-fami
   display: flex;
   justify-content: center;
   align-items: center;
-  box-shadow: 0 10px 50px rgba(0,0,0,0.6);
+  box-shadow: var(--table-shadow);
 }
 
-.player-info { position: absolute; padding: 10px 15px; background: rgba(0,0,0,0.85); border-radius: 15px; display: flex; flex-direction: column; align-items: center; min-width: 120px; z-index: 50; border: 1px solid rgba(255,255,255,0.2); }
+.player-info { position: absolute; padding: 10px 15px; background: var(--player-info-bg); border-radius: 15px; display: flex; flex-direction: column; align-items: center; min-width: 120px; z-index: 50; border: 1px solid var(--player-info-border); color: var(--text-color); }
 /* Bottom Player: Move INSIDE the table to avoid overlap with cards */
-.player-bottom { bottom: 60px; left: 50%; transform: translateX(-50%); border-bottom: 4px solid #ffeb3b; }
+.player-bottom { bottom: 60px; left: 50%; transform: translateX(-50%); border-bottom: 4px solid var(--player-bottom-border); }
 .player-left { left: -60px; top: 50%; transform: translateY(-50%); }
 .player-top { top: 20px; left: 50%; transform: translateX(-50%); }
 .player-right { right: -60px; top: 50%; transform: translateY(-50%); }
@@ -53,10 +129,10 @@ body { margin: 0; padding: 0; background-color: #0d4d1a; color: white; font-fami
 .player-header { display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 17px; }
 .player-points { font-size: 14px; opacity: 0.9; }
 .badges-row { display: flex; gap: 6px; margin-top: 5px; }
-.team-badge { font-size: 11px; background: #388e3c; padding: 2px 8px; border-radius: 10px; }
-.rekontra-badge { font-size: 11px; background: #d32f2f; padding: 2px 8px; border-radius: 10px; font-weight: bold; }
-.bid-badge { font-size: 11px; background: #1976d2; padding: 2px 8px; border-radius: 4px; }
-.current-turn-indicator { color: #ffeb3b; animation: bounce 1s infinite alternate; }
+.team-badge { font-size: 11px; background: var(--badge-team-bg); padding: 2px 8px; border-radius: 10px; color: white; }
+.rekontra-badge { font-size: 11px; background: var(--badge-rekontra-bg); padding: 2px 8px; border-radius: 10px; font-weight: bold; color: white; }
+.bid-badge { font-size: 11px; background: var(--badge-bid-bg); padding: 2px 8px; border-radius: 4px; color: white; }
+.current-turn-indicator { color: var(--turn-indicator-color); animation: bounce 1s infinite alternate; }
 
 @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-3px); } }
 
@@ -154,10 +230,10 @@ body { margin: 0; padding: 0; background-color: #0d4d1a; color: white; font-fami
 /* UI Overlays */
 .game-actions { position: absolute; top: 60px; width: 100%; display: flex; justify-content: center; z-index: 200; pointer-events: none; } /* Moved top to 60px */
 .game-actions > * { pointer-events: auto; }
-.ansage-btn { padding: 12px 25px; font-size: 18px; font-weight: bold; border-radius: 10px; cursor: pointer; border: 2px solid white; color: white; box-shadow: 0 4px 15px rgba(0,0,0,0.4); margin: 0 10px; }
-.ansage-btn.re { background: #d32f2f; }
-.ansage-btn.kontra { background: #1976d2; }
-.bidding-area { background: rgba(0,0,0,0.9); padding: 20px 40px; border-radius: 15px; border: 2px solid #ffeb3b; pointer-events: auto; }
+.ansage-btn { padding: 12px 25px; font-size: 18px; font-weight: bold; border-radius: 10px; cursor: pointer; border: 2px solid var(--text-color); color: var(--text-color); box-shadow: var(--button-shadow); margin: 0 10px; }
+.ansage-btn.re { background: var(--badge-rekontra-bg); color: white; border-color: white; }
+.ansage-btn.kontra { background: var(--badge-bid-bg); color: white; border-color: white; }
+.bidding-area { background: var(--bidding-area-bg); padding: 20px 40px; border-radius: 15px; border: 2px solid var(--bidding-area-border); pointer-events: auto; color: var(--text-color); }
 
 .notification-container {
   position: fixed;
@@ -216,18 +292,18 @@ body { margin: 0; padding: 0; background-color: #0d4d1a; color: white; font-fami
 
 .controls button {
   padding: 10px 20px;
-  background: #2e7d32;
-  border: 2px solid #ffeb3b;
+  background: var(--button-bg);
+  border: 2px solid var(--button-border);
   border-radius: 8px;
-  color: white;
+  color: var(--text-color);
   cursor: pointer;
   font-weight: bold;
   transition: 0.2s;
 }
 
 .controls button:hover {
-  background: #388e3c;
-  transform: scale(1.05);
+  background: var(--button-hover-bg);
+  transform: var(--button-hover-scale);
 }
 
 /* Scoring Overlay */
@@ -236,18 +312,19 @@ body { margin: 0; padding: 0; background-color: #0d4d1a; color: white; font-fami
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: rgba(0,0,0,0.95);
+  background: var(--scoring-bg);
   padding: 40px;
   border-radius: 20px;
-  border: 4px solid #ffeb3b;
+  border: 4px solid var(--scoring-border);
   text-align: center;
   z-index: 1000;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 20px;
-  box-shadow: 0 0 50px rgba(0,0,0,0.8);
+  box-shadow: var(--scoring-shadow);
   min-width: 500px;
+  color: var(--text-color);
 }
 
 .scoring-results {
@@ -257,9 +334,9 @@ body { margin: 0; padding: 0; background-color: #0d4d1a; color: white; font-fami
 .winner-banner {
   font-size: 32px;
   font-weight: bold;
-  color: #ffeb3b;
+  color: var(--title-color);
   margin-bottom: 20px;
-  text-shadow: 0 0 10px rgba(255, 235, 59, 0.5);
+  text-shadow: var(--title-menu-shadow);
 }
 
 .score-details {
@@ -300,8 +377,8 @@ body { margin: 0; padding: 0; background-color: #0d4d1a; color: white; font-fami
 .final-score-summary {
   font-size: 24px;
   font-weight: bold;
-  color: #fff;
-  background: #2e7d32;
+  color: var(--text-color);
+  background: var(--button-bg);
   padding: 10px 20px;
   border-radius: 10px;
   margin-top: 10px;

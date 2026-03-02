@@ -50,6 +50,7 @@ interface Room {
 }
 
 const rooms: Record<string, Room> = Object.create(null);
+const socketToPlayerMap = new Map<string, { roomId: string, playerId: string }>();
 const disconnectTimeouts = new Map<string, NodeJS.Timeout>();
 
 const MAX_ROOMS = 100;
@@ -59,6 +60,14 @@ const BOT_BID_DELAY_MS = 500;
 const TRICK_EVALUATION_DELAY_MS = 3500;
 const lastRoomCreation: Map<string, number> = new Map();
 const lastPlayerActionTime: Map<string, number> = new Map();
+
+const addPlayerToMap = (socketId: string, roomId: string, playerId: string) => {
+  socketToPlayerMap.set(socketId, { roomId, playerId });
+};
+
+const removePlayerFromMap = (socketId: string) => {
+  socketToPlayerMap.delete(socketId);
+};
 
 // Helper to generate room ID
 const generateRoomId = () => {
@@ -280,14 +289,7 @@ io.on('connection', (socket: Socket) => {
     }
 
     // 3. Check if already in a room
-    let alreadyInRoom = false;
-    for (const rid in rooms) {
-      if (rooms[rid].players.some(p => p.socketId === socket.id)) {
-        alreadyInRoom = true;
-        break;
-      }
-    }
-    if (alreadyInRoom) {
+    if (socketToPlayerMap.has(socket.id)) {
       socket.emit('error', 'You are already in a room.');
       return;
     }
@@ -310,6 +312,7 @@ io.on('connection', (socket: Socket) => {
       hostId: playerId,
       isPublic: false
     };
+    addPlayerToMap(socket.id, roomId, playerId);
     socket.join(roomId);
     socket.emit('room_created', {
         roomId,
@@ -332,6 +335,7 @@ io.on('connection', (socket: Socket) => {
             if (idx !== -1) {
                 room.players.splice(idx, 1);
             }
+            removePlayerFromMap(socket.id);
 
             // Clear disconnect timeout if exists
             const timer = disconnectTimeouts.get(player.id);
@@ -375,9 +379,12 @@ io.on('connection', (socket: Socket) => {
       const existingPlayer = room.players.find(p => p.id === playerId);
       if (existingPlayer) {
           // Reconnection logic
+          const oldSocketId = existingPlayer.socketId;
+          if (oldSocketId) removePlayerFromMap(oldSocketId);
           existingPlayer.socketId = socket.id;
           existingPlayer.connected = true;
           delete existingPlayer.disconnectTime;
+          addPlayerToMap(socket.id, roomId, playerId);
 
           const timer = disconnectTimeouts.get(playerId);
           if (timer) {
@@ -412,6 +419,7 @@ io.on('connection', (socket: Socket) => {
               ready: true,
               connected: true
           });
+          addPlayerToMap(socket.id, roomId, playerId);
           socket.join(roomId);
           console.log(`[join_room] ${playerName} joined ${roomId}. Players: ${room.players.map(p => p.name).join(', ')}`);
 
@@ -576,6 +584,7 @@ io.on('connection', (socket: Socket) => {
             room.players.splice(idx, 1);
             // Notify the kicked player
             if (targetPlayer.socketId) {
+                removePlayerFromMap(targetPlayer.socketId);
                 io.to(targetPlayer.socketId).emit('kicked');
                 // Force disconnect logic
                 const socketToKick = io.sockets.sockets.get(targetPlayer.socketId);
@@ -747,10 +756,12 @@ io.on('connection', (socket: Socket) => {
 
     // Remove player from room? 
     // Mark as disconnected.
-    for (const roomId in rooms) {
+    const mapping = socketToPlayerMap.get(socket.id);
+    if (mapping) {
+        const { roomId, playerId } = mapping;
         const room = rooms[roomId];
-        const player = room.players.find(p => p.socketId === socket.id);
-        if (player) {
+        const player = room?.players.find(p => p.id === playerId);
+        if (player && player.socketId === socket.id) {
             player.connected = false;
             player.disconnectTime = Date.now();
 
@@ -780,6 +791,7 @@ io.on('connection', (socket: Socket) => {
                 if (p && !p.connected) {
                     const idx = currentRoom.players.indexOf(p);
                     if (idx !== -1) {
+                        if (p.socketId) removePlayerFromMap(p.socketId);
                         currentRoom.players.splice(idx, 1);
                         io.to(roomId).emit('player_left', currentRoom.players);
 

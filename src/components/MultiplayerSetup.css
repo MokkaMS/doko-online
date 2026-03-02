@@ -1,0 +1,114 @@
+.multiplayer-container {
+  overflow-y: auto;
+  max-height: 100vh;
+}
+
+.name-input {
+  background-color: white;
+  color: black;
+  margin-left: 10px;
+  padding: 5px;
+  font-size: 18px;
+}
+
+.menu-content.setup-menu-content {
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.join-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+}
+
+.room-id-input {
+  background-color: white;
+  color: black;
+  padding: 10px;
+  font-size: 18px;
+  border-radius: 8px;
+  border: none;
+  width: 120px;
+}
+
+.public-rooms-section {
+  margin-top: 30px;
+  border-top: 1px solid #555;
+  padding-top: 20px;
+  width: 100%;
+}
+
+.public-rooms-header {
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.refresh-btn {
+  background: transparent;
+  border: 1px solid #aaa;
+  color: #aaa;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8em;
+  padding: 4px 8px;
+}
+
+.refresh-btn:hover {
+  border-color: #fff;
+  color: #fff;
+}
+
+.no-rooms {
+  color: #888;
+  font-style: italic;
+}
+
+.rooms-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.room-item {
+  background: #333;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid #444;
+}
+
+.room-item.selected {
+  border: 2px solid #4caf50;
+}
+
+.room-id-text {
+  font-weight: bold;
+  color: #ffeb3b;
+}
+
+.room-host-text {
+  margin-left: 10px;
+  color: #ccc;
+}
+
+.player-count {
+  color: #4caf50;
+}
+
+.player-count.full {
+  color: #ff6b6b;
+}
+
+.menu-button.back-btn {
+  margin-top: 20px;
+  background: #555;
+}

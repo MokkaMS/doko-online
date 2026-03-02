@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { Card, GameState, GameSettings, GameType } from '../logic/types';
+import { Card, GameState, GameSettings, GameType, Player } from '../logic/types';
 import { getStoredPlayerId, getStoredRoomId, setStoredRoomId, getStoredPlayerName, setStoredPlayerName } from '../utils/storage';
 
 const socket: Socket = io({ autoConnect: false });
@@ -107,26 +107,26 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     socket.on('connect', handleConnect);
 
-    socket.on('room_created', ({ roomId, players, settings, hostId, isPublic }: { roomId: string, players: any[], settings: GameSettings, hostId: string, isPublic: boolean }) => {
+    socket.on('room_created', ({ roomId, players, settings, hostId, isPublic }: { roomId: string, players: Partial<Player>[], settings: GameSettings, hostId: string, isPublic: boolean }) => {
       setRoomId(roomId);
       setStoredRoomId(roomId);
       setSettings(settings);
       setHostId(hostId);
       setIsPublic(isPublic);
-      setState(prev => ({ ...prev, phase: 'Lobby', players: players.map(p => ({ ...p, isBot: p.isBot || false, hand: [], tricks: [], points: 0, team: 'Unknown' })) }));
+      setState(prev => ({ ...prev, phase: 'Lobby', players: players.map(p => ({ ...p, isBot: p.isBot || false, hand: [], tricks: [], points: 0, team: 'Unknown' })) as Player[] }));
     });
 
-    socket.on('joined_room', ({ roomId, players, settings, hostId, isPublic }: { roomId: string, players: any[], settings: GameSettings, hostId: string, isPublic: boolean }) => {
+    socket.on('joined_room', ({ roomId, players, settings, hostId, isPublic }: { roomId: string, players: Partial<Player>[], settings: GameSettings, hostId: string, isPublic: boolean }) => {
       setRoomId(roomId);
       setStoredRoomId(roomId);
       setSettings(settings);
       setHostId(hostId);
       setIsPublic(isPublic);
-      setState(prev => ({ ...prev, phase: 'Lobby', players: players.map(p => ({ ...p, isBot: p.isBot || false, hand: [], tricks: [], points: 0, team: 'Unknown' })) }));
+      setState(prev => ({ ...prev, phase: 'Lobby', players: players.map(p => ({ ...p, isBot: p.isBot || false, hand: [], tricks: [], points: 0, team: 'Unknown' })) as Player[] }));
     });
 
-    socket.on('player_joined', (players: any[]) => {
-      setState(prev => ({ ...prev, players: players.map(p => ({ ...p, isBot: p.isBot || false, hand: [], tricks: [], points: 0, team: 'Unknown' })) }));
+    socket.on('player_joined', (players: Partial<Player>[]) => {
+      setState(prev => ({ ...prev, players: players.map(p => ({ ...p, isBot: p.isBot || false, hand: [], tricks: [], points: 0, team: 'Unknown' })) as Player[] }));
     });
 
     socket.on('room_update', (data: { hostId?: string, isPublic?: boolean }) => {
@@ -139,7 +139,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setRoomId(null);
         setStoredRoomId(null);
         setHostId(null);
-        setState(prev => ({ ...initialGameState, phase: 'MainMenu' }));
+        setState(() => ({ ...initialGameState, phase: 'MainMenu' }));
     });
 
     socket.on('public_rooms_list', (rooms: PublicRoom[]) => {
@@ -223,7 +223,11 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setRoomId(null);
         setHostId(null);
     }
-    setState(prev => ({ ...prev, phase: 'MainMenu', lastActivePhase: prev.phase as any }));
+    setState(prev => ({
+        ...prev,
+        phase: 'MainMenu',
+        lastActivePhase: (prev.phase === 'Bidding' || prev.phase === 'Playing' || prev.phase === 'Scoring') ? prev.phase : undefined
+    }));
   }, [roomId]);
 
   const openSettings = useCallback(() => {

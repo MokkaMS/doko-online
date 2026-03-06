@@ -3,6 +3,7 @@ import http from 'http';
 import path from 'path';
 import { Server, Socket } from 'socket.io';
 import cors from 'cors';
+import crypto from 'crypto';
 import { GameEngine } from './logic/GameEngine';
 import { GameState, Card, GameSettings, GameType, Suit, CardValue } from './logic/types';
 import { Bot } from './logic/Bot';
@@ -75,7 +76,7 @@ const removePlayerFromMap = (socketId: string) => {
 
 // Helper to generate room ID
 const generateRoomId = () => {
-  return Math.random().toString(36).substring(2, 6).toUpperCase();
+  return crypto.randomBytes(3).toString('hex').toUpperCase();
 };
 
 const defaultSettings: GameSettings = {
@@ -517,7 +518,7 @@ io.on('connection', (socket: Socket) => {
       }
 
       if (room.players.length < 4) {
-        const botId = `bot-${Math.random().toString(36).substr(2, 5)}`;
+        const botId = `bot-${crypto.randomBytes(4).toString('hex')}`;
         room.players.push({
           id: botId,
           name: `Bot ${room.players.length}`,
@@ -549,7 +550,7 @@ io.on('connection', (socket: Socket) => {
 
       // Auto-fill with bots if less than 4
       while (room.players.length < 4) {
-        const botId = `bot-${Math.random().toString(36).substr(2, 5)}`;
+        const botId = `bot-${crypto.randomBytes(4).toString('hex')}`;
         room.players.push({
           id: botId,
           name: `Bot ${room.players.length}`,

@@ -9,6 +9,9 @@ export const CARD_POINTS: Record<CardValue, number> = {
   [CardValue.Neun]: 0,
 };
 
+const NORMAL_GAME_TYPES = [GameType.Normal, GameType.Hochzeit];
+const SOLO_GAME_TYPES = [GameType.DamenSolo, GameType.BubenSolo, GameType.FarbenSolo];
+
 export const createDeck = (mitNeunen: boolean): Card[] => {
   const deck: Card[] = [];
   const suits = [Suit.Kreuz, Suit.Pik, Suit.Herz, Suit.Karo];
@@ -54,14 +57,14 @@ export const isTrump = (card: Card, gameType: GameType, trumpSuit: Suit | null, 
   }
 
   // Check for Solo types that have standard trumps (Damen/Buben/Farben)
-  const isSolo = [GameType.DamenSolo, GameType.BubenSolo, GameType.FarbenSolo].includes(gameType);
+  const isSolo = SOLO_GAME_TYPES.includes(gameType);
 
   // Dulle logic for Normal/Hochzeit (Dependent on settings)
   if (card.value === CardValue.Zehn && card.suit === Suit.Herz && settings.dullenAlsHoechste && !isSolo) {
     return true;
   }
 
-  if (gameType === GameType.Normal || gameType === GameType.Hochzeit) {
+  if (NORMAL_GAME_TYPES.includes(gameType)) {
     return (
       card.suit === Suit.Karo ||
       card.value === CardValue.Dame ||
@@ -89,7 +92,7 @@ export const getCardPower = (card: Card, gameType: GameType, trumpSuit: Suit | n
     // - In FarbenSolo always highest.
     // - In Normal/Hochzeit if dullenAlsHoechste is true.
     const isFarbenSoloHerz10 = gameType === GameType.FarbenSolo && card.value === CardValue.Zehn && card.suit === Suit.Herz;
-    const isNormalDulle = [GameType.Normal, GameType.Hochzeit].includes(gameType) &&
+    const isNormalDulle = NORMAL_GAME_TYPES.includes(gameType) &&
                           card.value === CardValue.Zehn && card.suit === Suit.Herz && settings.dullenAlsHoechste;
 
     if (isFarbenSoloHerz10 || isNormalDulle) {

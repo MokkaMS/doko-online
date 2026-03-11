@@ -130,6 +130,25 @@ const handleBotTurns = (roomId: string) => {
   if (!room || !room.gameState || room.gameState.phase !== 'Playing') return;
 
   const state = room.gameState;
+
+  // Let bots decide if they want to announce Re or Kontra before someone plays a card
+  for (const p of state.players) {
+    if (p.isBot) {
+      const announcement = Bot.decideAnnouncement(p, state, room.settings);
+      if (announcement) {
+        if (announcement === 'Re' && state.rePlayerIds.includes(p.id)) {
+           state.reKontraAnnouncements[p.id] = 'Re';
+           state.notifications.push({ id: Date.now() + Math.random(), text: `${p.name} sagt Re!` });
+           io.to(roomId).emit('game_state_update', state);
+        } else if (announcement === 'Kontra' && state.kontraPlayerIds.includes(p.id)) {
+           state.reKontraAnnouncements[p.id] = 'Kontra';
+           state.notifications.push({ id: Date.now() + Math.random(), text: `${p.name} sagt Kontra!` });
+           io.to(roomId).emit('game_state_update', state);
+        }
+      }
+    }
+  }
+
   const currentPlayer = state.players[state.currentPlayerIndex];
 
   if (currentPlayer && currentPlayer.isBot) {
@@ -711,7 +730,8 @@ io.on('connection', (socket: Socket) => {
     const state = room.gameState;
     const currentP = state.players[state.currentPlayerIndex];
     if (currentP.isBot) {
-      executeSubmitBid(roomId, currentP.id, 'Gesund');
+      const bid = Bot.evaluateHandForBid(currentP, room.settings);
+      executeSubmitBid(roomId, currentP.id, bid);
     }
   };
 

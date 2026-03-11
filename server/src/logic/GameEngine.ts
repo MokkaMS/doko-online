@@ -150,8 +150,19 @@ export class GameEngine {
       return;
     }
 
-    const revealedReCount = state.players.filter(p => p.team === 'Re' && p.isRevealed).length;
-    const revealedKontraCount = state.players.filter(p => p.team === 'Kontra' && p.isRevealed).length;
+    let revealedReCount = 0;
+    let revealedKontraCount = 0;
+
+    for (let i = 0; i < state.players.length; i++) {
+      const p = state.players[i];
+      if (p.isRevealed) {
+        if (p.team === 'Re') {
+          revealedReCount++;
+        } else if (p.team === 'Kontra') {
+          revealedKontraCount++;
+        }
+      }
+    }
 
     if (revealedReCount === 2) {
       // Reveal all Kontra

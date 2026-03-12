@@ -128,8 +128,57 @@ export const GameTable: React.FC = () => {
             setSelectedCardId(null);
         }
     }}>
-      <div className="game-header">
-         <h1 className="game-status-title">DOPPELKOPF - {state.phase === 'Bidding' ? 'Vorbehalt wählen' : (state.gameType === 'Normal' ? 'Normalspiel' : state.gameType)}</h1>
+      <div className="opponents-stripe">
+        {[1, 2, 3].map(relativeIdx => {
+          const absoluteIdx = (localPlayerIndex + relativeIdx) % 4;
+          const p = state.players[absoluteIdx];
+          if (!p) return null;
+
+          return (
+            <div key={p.id} className={`opponent-info-inline opponent-${relativeIdx}`}>
+              <div className="opponent-header">
+                <span className="opponent-name">
+                  {p.name} {p.id === state.players[state.dealerIndex]?.id && '(G)'}
+                  {p.connected === false && <span style={{color: '#ff6b6b', marginLeft: '5px', fontSize: '0.8em'}}>(Disc)</span>}
+                </span>
+                {state.currentPlayerIndex === absoluteIdx && <span className="current-turn-indicator">★</span>}
+              </div>
+              <span className="opponent-points">
+                {p.tournamentPoints} Pkt
+                {state.phase === 'Scoring' && ` (${p.points} A)`}
+              </span>
+              <div className="badges-row inline-badges">
+                {(p.isRevealed || state.phase === 'Scoring') && (
+                    <div className="team-badge">{p.team}</div>
+                )}
+                {!p.isRevealed && state.phase !== 'Scoring' && (
+                    <div className="team-badge">?</div>
+                )}
+                {state.reKontraAnnouncements[p.id] && <div className="rekontra-badge">{state.reKontraAnnouncements[p.id]}</div>}
+                {state.announcements[p.id] && <div className="bid-badge">{state.announcements[p.id][0]}</div>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="local-player-box">
+        <div className="opponent-header">
+          <span className="opponent-name">
+            {humanPlayer.name} {humanPlayer.id === state.players[state.dealerIndex]?.id && '(G)'}
+            {humanPlayer.connected === false && <span style={{color: '#ff6b6b', marginLeft: '5px', fontSize: '0.8em'}}>(Disc)</span>}
+          </span>
+          {state.currentPlayerIndex === localPlayerIndex && <span className="current-turn-indicator">★</span>}
+        </div>
+        <span className="opponent-points">
+          {humanPlayer.tournamentPoints} Pkt
+          {state.phase === 'Scoring' && ` (${humanPlayer.points} A)`}
+        </span>
+        <div className="badges-row inline-badges">
+          <div className="team-badge">{humanPlayer.team}</div>
+          {state.reKontraAnnouncements[humanPlayer.id] && <div className="rekontra-badge">{state.reKontraAnnouncements[humanPlayer.id]}</div>}
+          {state.announcements[humanPlayer.id] && <div className="bid-badge">{state.announcements[humanPlayer.id][0]}</div>}
+        </div>
       </div>
 
       <div
@@ -181,41 +230,6 @@ export const GameTable: React.FC = () => {
         </div>
 
         <div className="table">
-          {[0,1,2,3].map(idx => {
-            const p = state.players[idx];
-            if (!p) return null;
-
-            // Calculate relative position: "Me" is always bottom (index 0 relative)
-            const relativeIdx = (idx - localPlayerIndex + 4) % 4;
-            const posClass = ['player-bottom', 'player-left', 'player-top', 'player-right'][relativeIdx];
-
-            return (
-              <div key={p.id} className={`player-info ${posClass}`}>
-                <div className="player-header">
-                  <span className="player-name">
-                    {p.name} {p.id === state.players[state.dealerIndex]?.id && '(G)'}
-                    {p.connected === false && <span style={{color: '#ff6b6b', marginLeft: '5px', fontSize: '0.8em'}}>(Disc)</span>}
-                  </span>
-                  {state.currentPlayerIndex === idx && <span className="current-turn-indicator">★</span>}
-                </div>
-                <span className="player-points">
-                  {p.tournamentPoints} Pkt
-                  {state.phase === 'Scoring' && ` (${p.points} A)`}
-                </span>
-                <div className="badges-row">
-                  {(p.id === humanPlayer.id || p.isRevealed || state.phase === 'Scoring') && (
-                      <div className="team-badge">{p.team}</div>
-                  )}
-                  {p.id !== humanPlayer.id && !p.isRevealed && state.phase !== 'Scoring' && (
-                      <div className="team-badge">?</div>
-                  )}
-                  {state.reKontraAnnouncements[p.id] && <div className="rekontra-badge">{state.reKontraAnnouncements[p.id]}</div>}
-                </div>
-                {state.announcements[p.id] && <div className="bid-badge">{state.announcements[p.id][0]}</div>}
-              </div>
-            );
-          })}
-
           <div className="trick">
             {state.currentTrick.map((card, i) => {
                const playerIdx = (state.trickStarterIndex + i) % 4;
@@ -256,11 +270,12 @@ export const GameTable: React.FC = () => {
         </div>
 
         <div className="controls">
-          <button onClick={toggleTheme} style={{ marginRight: '10px', backgroundColor: '#555' }}>
-            {theme === 'classic' ? 'Minimal' : 'Klassisch'}
+          <button onClick={toggleTheme} className="icon-btn" title="Theme">
+            {theme === 'classic' ? '🌓' : '☀'}
           </button>
-          <button onClick={goToMainMenu}>Hauptmenü</button>
-          <button onClick={reconnect} style={{ marginLeft: '10px', backgroundColor: '#555' }}>Reconnect</button>
+          <button onClick={goToMainMenu} className="icon-btn" title="Hauptmenü">
+            ☰
+          </button>
         </div>
 
         {state.phase === 'Scoring' && state.lastGameResult && (

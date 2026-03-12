@@ -119,16 +119,47 @@ body { margin: 0; padding: 0; background: var(--bg-color); color: var(--text-col
   box-shadow: var(--table-shadow);
 }
 
-.player-info { position: absolute; padding: 10px 15px; background: var(--player-info-bg); border-radius: 15px; display: flex; flex-direction: column; align-items: center; min-width: 120px; z-index: 50; border: 1px solid var(--player-info-border); color: var(--text-color); }
-/* Bottom Player: Move INSIDE the table to avoid overlap with cards */
-.player-bottom { bottom: 60px; left: 50%; transform: translateX(-50%); border-bottom: 4px solid var(--player-bottom-border); }
-.player-left { left: -60px; top: 50%; transform: translateY(-50%); }
-.player-top { top: 20px; left: 50%; transform: translateX(-50%); }
-.player-right { right: -60px; top: 50%; transform: translateY(-50%); }
+.opponents-stripe {
+  position: absolute;
+  top: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-evenly;
+  background: var(--player-info-bg);
+  border-bottom: 1px solid var(--player-info-border);
+  padding: 10px 0;
+  z-index: 150;
+}
 
-.player-header { display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 17px; }
-.player-points { font-size: 14px; opacity: 0.9; }
+.opponent-info-inline {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  color: var(--text-color);
+}
+
+.local-player-box {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--player-info-bg);
+  border: 1px solid var(--player-info-border);
+  border-bottom: none;
+  border-radius: 15px 15px 0 0;
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  color: var(--text-color);
+  z-index: 150;
+}
+
+.opponent-header { display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 16px; }
+.opponent-points { font-size: 14px; opacity: 0.9; }
+
 .badges-row { display: flex; gap: 6px; margin-top: 5px; }
+.badges-row.inline-badges { margin-top: 0; }
 .team-badge { font-size: 11px; background: var(--badge-team-bg); padding: 2px 8px; border-radius: 10px; color: white; }
 .rekontra-badge { font-size: 11px; background: var(--badge-rekontra-bg); padding: 2px 8px; border-radius: 10px; font-weight: bold; color: white; }
 .bid-badge { font-size: 11px; background: var(--badge-bid-bg); padding: 2px 8px; border-radius: 4px; color: white; }
@@ -285,23 +316,31 @@ body { margin: 0; padding: 0; background: var(--bg-color); color: var(--text-col
 
 .controls {
   position: absolute;
-  top: 20px;
+  top: 60px; /* Moved down to avoid overlapping the new stripe */
   right: 20px;
   z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-.controls button {
-  padding: 10px 20px;
+.icon-btn {
+  width: 44px;
+  height: 44px;
   background: var(--button-bg);
   border: 2px solid var(--button-border);
-  border-radius: 8px;
+  border-radius: 50%;
   color: var(--text-color);
   cursor: pointer;
-  font-weight: bold;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: 0.2s;
+  box-shadow: var(--button-shadow);
 }
 
-.controls button:hover {
+.icon-btn:hover {
   background: var(--button-hover-bg);
   transform: var(--button-hover-scale);
 }

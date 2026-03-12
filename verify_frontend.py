@@ -14,20 +14,26 @@ def run():
             page.wait_for_selector("h1:has-text('DOPPELKOPF')")
             print("Found Title.")
 
-            # Click Multiplayer
-            page.click("text=Multiplayer")
+            # Click Spielen
+            page.click("text=Spielen")
 
             # Enter Name
             print("Entering name...")
-            page.fill("input[value='']", "Tester")
+            page.fill("input.name-input", "Tester")
 
             # Create Game
             print("Creating game...")
-            page.click("text=Neues Spiel erstellen")
+            page.click("button:has-text('Neues Spiel erstellen')")
 
             # Wait for Waiting Room
             page.wait_for_selector("text=WARTERAUM")
             print("In Waiting Room.")
+
+            # Add bots
+            print("Adding bots...")
+            for _ in range(3):
+                 time.sleep(2)
+                 page.click("text=+ Bot")
 
             # Start Game
             print("Starting game...")

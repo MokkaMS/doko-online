@@ -53,11 +53,13 @@ describe('storage utils', () => {
 
       // Mock crypto.randomUUID
       const originalCrypto = globalThis.crypto;
-      // @ts-ignore
-      globalThis.crypto = {
-        ...originalCrypto,
-        randomUUID: vi.fn().mockReturnValue(mockUUID),
-      };
+      Object.defineProperty(globalThis, 'crypto', {
+        value: {
+          ...originalCrypto,
+          randomUUID: vi.fn().mockReturnValue(mockUUID),
+        },
+        configurable: true
+      });
 
       const result = getStoredPlayerId();
 
@@ -66,14 +68,19 @@ describe('storage utils', () => {
       expect(globalThis.crypto.randomUUID).toHaveBeenCalled();
 
       // Restore
-      globalThis.crypto = originalCrypto;
+      Object.defineProperty(globalThis, 'crypto', {
+        value: originalCrypto,
+        configurable: true
+      });
     });
 
     it('should generate and store a fallback ID if crypto.randomUUID is not available', () => {
        // Mock crypto to be undefined or missing randomUUID
        const originalCrypto = globalThis.crypto;
-       // @ts-ignore
-       delete globalThis.crypto;
+       Object.defineProperty(globalThis, 'crypto', {
+        value: undefined,
+        configurable: true
+       });
 
        const result = getStoredPlayerId();
 
@@ -83,7 +90,10 @@ describe('storage utils', () => {
        expect(localStorage.getItem(STORAGE_KEY)).toBe(result);
 
        // Restore
-       globalThis.crypto = originalCrypto;
+       Object.defineProperty(globalThis, 'crypto', {
+        value: originalCrypto,
+        configurable: true
+       });
     });
   });
 

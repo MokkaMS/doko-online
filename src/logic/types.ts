@@ -90,6 +90,7 @@ export interface GameState {
   specialPoints: { re: string[], kontra: string[] }; // Tracks events during game
   lastGameResult?: ScoringResult; // Stores the result of the last game
   notifications: { id: number, text: string }[];
+  currentTrickNotifications?: string[];
   phase: 'MainMenu' | 'Lobby' | 'Settings' | 'Dealing' | 'Bidding' | 'Playing' | 'Scoring';
   lastActivePhase?: 'Bidding' | 'Playing' | 'Scoring';
 }

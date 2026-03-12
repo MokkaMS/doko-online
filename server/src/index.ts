@@ -223,6 +223,20 @@ const executePlayCard = (roomId: string, playerId: string, card: Card) => {
   if (newTrick.length === 4) {
     // Determine winner immediately for animation
     state.trickWinnerIndex = GameEngine.evaluateTrick(state.currentTrick, state.trickStarterIndex, state.gameType, state.trumpSuit, room.settings);
+
+    // Evaluate Special Points IMMEDIATELY to populate notifications
+    const isLastTrick = state.players.every(p => p.hand.length === 0);
+    const special = GameEngine.checkTrickSpecialPoints(
+      state.currentTrick,
+      state.trickWinnerIndex,
+      state.trickStarterIndex,
+      state.players,
+      room.settings,
+      isLastTrick
+    );
+    state.currentTrickNotifications = special.notifications;
+  } else {
+    state.currentTrickNotifications = [];
   }
 
   emitToRoom(roomId, 'game_state_update', state);

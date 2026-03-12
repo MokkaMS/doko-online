@@ -15,6 +15,7 @@ export const GameTable: React.FC = () => {
   const [scale, setScale] = useState(1);
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [trickAnimationPhase, setTrickAnimationPhase] = useState<'idle' | 'waiting' | 'center' | 'winner'>('idle');
+  const [popupText, setPopupText] = useState<string | null>(null);
 
   const baseWidth = 1024;
   const baseHeight = 768;
@@ -31,6 +32,21 @@ export const GameTable: React.FC = () => {
 
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  const trickNotificationsKey = state.currentTrickNotifications?.join(',') || '';
+
+  useEffect(() => {
+    let popupTimer: ReturnType<typeof setTimeout>;
+    if (state.currentTrickNotifications && state.currentTrickNotifications.length > 0) {
+        setPopupText(state.currentTrickNotifications.join(' + '));
+        popupTimer = setTimeout(() => {
+            setPopupText(null);
+        }, 1500); // Popup is shown for 1.5s
+    } else {
+        setPopupText(null);
+    }
+    return () => clearTimeout(popupTimer);
+  }, [trickNotificationsKey]);
 
   useEffect(() => {
     let timer1: ReturnType<typeof setTimeout>;
@@ -257,6 +273,12 @@ export const GameTable: React.FC = () => {
             })}
           </div>
         </div>
+
+        {popupText && (
+          <div className="special-popup-overlay">
+            {popupText}
+          </div>
+        )}
 
         <div className="hand">
           {sortedHand.map(card => (

@@ -63,6 +63,7 @@ const initialGameState: GameState = {
   reKontraAnnouncements: {},
   specialPoints: { re: [], kontra: [] },
   notifications: [],
+  currentTrickNotifications: [],
   phase: 'MainMenu',
 };
 

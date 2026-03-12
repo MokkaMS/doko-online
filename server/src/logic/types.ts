@@ -29,6 +29,7 @@ export enum GameType {
   Fleischlos = 'Fleischlos',
   BubenSolo = 'BubenSolo',
   DamenSolo = 'DamenSolo',
+  DamenBubensolo = 'DamenBubensolo',
   FarbenSolo = 'FarbenSolo',
 }
 
@@ -57,7 +58,7 @@ export interface GameSettings {
   soloPrioritaet: boolean;
 }
 
-export type Bid = 'Gesund' | 'Hochzeit' | 'DamenSolo' | 'BubenSolo' | 'FarbenSolo' | 'Fleischlos';
+export type Bid = 'Gesund' | 'Hochzeit' | 'DamenSolo' | 'BubenSolo' | 'DamenBubensolo' | 'FarbenSolo' | 'Fleischlos';
 
 export interface ScoringResult {
   winner: 'Re' | 'Kontra' | null;

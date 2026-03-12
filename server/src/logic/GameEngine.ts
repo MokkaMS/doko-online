@@ -49,7 +49,7 @@ export class GameEngine {
   }
 
   static determineStartingPlayerIndex(gameType: GameType, dealerIndex: number, soloPlayerId: string | null, players: Player[]): number {
-    if ([GameType.DamenSolo, GameType.BubenSolo, GameType.FarbenSolo, GameType.Fleischlos].includes(gameType)) {
+    if ([GameType.DamenSolo, GameType.BubenSolo, GameType.DamenBubensolo, GameType.FarbenSolo, GameType.Fleischlos].includes(gameType)) {
       if (soloPlayerId) {
         const index = players.findIndex(p => p.id === soloPlayerId);
         if (index !== -1) {
@@ -64,6 +64,7 @@ export class GameEngine {
   static determineFinalGameType(bids: Record<string, string>, playerIdsInOrder: string[]): { gameType: GameType, trumpSuit: Suit | null, soloPlayerId: string | null } {
     const priorityOrder = [
       GameType.FarbenSolo,
+      GameType.DamenBubensolo,
       GameType.DamenSolo,
       GameType.BubenSolo,
       GameType.Fleischlos,
@@ -81,6 +82,8 @@ export class GameEngine {
             if (parts.length > 1) trump = parts[1] as Suit;
         } else if (rawBid === 'Fleischlos') {
             type = GameType.Fleischlos;
+        } else if (rawBid === 'DamenBubensolo') {
+            type = GameType.DamenBubensolo;
         } else if (rawBid === 'DamenSolo') {
             type = GameType.DamenSolo;
         } else if (rawBid === 'BubenSolo') {
@@ -374,7 +377,7 @@ export class GameEngine {
         netScore = kontraGamePoints - reGamePoints;
     }
 
-    const isSolo = [GameType.DamenSolo, GameType.BubenSolo, GameType.FarbenSolo, GameType.Fleischlos].includes(state.gameType);
+    const isSolo = [GameType.DamenSolo, GameType.BubenSolo, GameType.DamenBubensolo, GameType.FarbenSolo, GameType.Fleischlos].includes(state.gameType);
 
     // Update Tournament Points
     newState.players = newState.players.map(p => {

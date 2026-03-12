@@ -26,6 +26,11 @@ export class Bot {
       return 'BubenSolo';
     }
 
+    const damenBubenCount = damenCount + bubenCount;
+    if (damenBubenCount >= 10 && damenCount >= 4) {
+      return 'DamenBubensolo';
+    }
+
     // FarbenSolo check: if we have strong trumps of a specific color, but that requires setting trumpSuit which isn't part of Bid.
     // For now we keep it simple.
 

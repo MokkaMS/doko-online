@@ -50,6 +50,15 @@ describe('cardUtils', () => {
       expect(isTrump(createCard(Suit.Kreuz, CardValue.Koenig), GameType.Normal, null, settings)).toBe(false);
     });
 
+    it('should identify trumps in DamenBubensolo', () => {
+      const settings = { ...defaultSettings };
+      // Queens and Jacks are trump
+      expect(isTrump(createCard(Suit.Herz, CardValue.Dame), GameType.DamenBubensolo, null, settings)).toBe(true);
+      expect(isTrump(createCard(Suit.Kreuz, CardValue.Bube), GameType.DamenBubensolo, null, settings)).toBe(true);
+      expect(isTrump(createCard(Suit.Karo, CardValue.Ass), GameType.DamenBubensolo, null, settings)).toBe(false);
+      expect(isTrump(createCard(Suit.Herz, CardValue.Zehn), GameType.DamenBubensolo, null, settings)).toBe(false);
+    });
+
     it('should handle "Dullen als höchste" setting', () => {
       const settingsWithDulle = { ...defaultSettings, dullenAlsHoechste: true };
       const settingsWithoutDulle = { ...defaultSettings, dullenAlsHoechste: false };

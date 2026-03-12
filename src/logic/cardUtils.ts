@@ -10,7 +10,7 @@ export const CARD_POINTS: Record<CardValue, number> = {
 };
 
 const NORMAL_GAME_TYPES = [GameType.Normal, GameType.Hochzeit];
-const SOLO_GAME_TYPES = [GameType.DamenSolo, GameType.BubenSolo, GameType.FarbenSolo];
+const SOLO_GAME_TYPES = [GameType.DamenSolo, GameType.BubenSolo, GameType.DamenBubensolo, GameType.FarbenSolo];
 
 export const createDeck = (mitNeunen: boolean): Card[] => {
   const deck: Card[] = [];
@@ -74,6 +74,9 @@ export const isTrump = (card: Card, gameType: GameType, trumpSuit: Suit | null, 
 
   if (gameType === GameType.DamenSolo) return card.value === CardValue.Dame;
   if (gameType === GameType.BubenSolo) return card.value === CardValue.Bube;
+  if (gameType === GameType.DamenBubensolo) {
+      return card.value === CardValue.Dame || card.value === CardValue.Bube;
+  }
 
   if (gameType === GameType.FarbenSolo) {
     return card.suit === trumpSuit || card.value === CardValue.Dame || card.value === CardValue.Bube;

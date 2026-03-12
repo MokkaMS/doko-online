@@ -207,6 +207,7 @@ export const GameTable: React.FC = () => {
                     {hasBothReQueens && <button onClick={() => submitBid(humanPlayer.id, 'Hochzeit')}>Hochzeit</button>}
                     <button onClick={() => submitBid(humanPlayer.id, 'DamenSolo')}>Damen-Solo</button>
                     <button onClick={() => submitBid(humanPlayer.id, 'BubenSolo')}>Buben-Solo</button>
+                    <button onClick={() => submitBid(humanPlayer.id, 'DamenBubensolo')}>Damen-Buben-Solo</button>
                     <button onClick={handleFarbenSoloClick}>Farben-Solo</button>
                     <button onClick={() => submitBid(humanPlayer.id, 'Fleischlos')}>Fleischlos</button>
                   </div>

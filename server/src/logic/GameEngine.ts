@@ -33,6 +33,7 @@ export class GameEngine {
       reKontraAnnouncements: {},
       specialPoints: { re: [], kontra: [] },
       notifications: [],
+      currentTrickNotifications: [],
       phase: 'MainMenu',
     };
   }
@@ -240,9 +241,10 @@ export class GameEngine {
     players: Player[],
     settings: GameSettings,
     isLastTrick: boolean
-  ): { re: string[], kontra: string[] } {
+  ): { re: string[], kontra: string[], notifications: string[] } {
     const rePoints: string[] = [];
     const kontraPoints: string[] = [];
+    const notifications: string[] = [];
 
     const winner = players[winnerIndex];
     const winnerTeam = winner.team;
@@ -253,6 +255,7 @@ export class GameEngine {
         if (points >= 40) {
             if (winnerTeam === 'Re') rePoints.push('Doppelkopf');
             else if (winnerTeam === 'Kontra') kontraPoints.push('Doppelkopf');
+            notifications.push('Doppelkopf');
         }
     }
 
@@ -265,8 +268,14 @@ export class GameEngine {
 
                 if (player.team === 'Re' && winnerTeam === 'Kontra') {
                     kontraPoints.push('Fuchs gefangen');
+                    if (player.isRevealed && winner.isRevealed) {
+                        notifications.push('Fuchs gefangen');
+                    }
                 } else if (player.team === 'Kontra' && winnerTeam === 'Re') {
                     rePoints.push('Fuchs gefangen');
+                    if (player.isRevealed && winner.isRevealed) {
+                        notifications.push('Fuchs gefangen');
+                    }
                 }
             }
         });
@@ -280,10 +289,11 @@ export class GameEngine {
         if (winningCard.suit === Suit.Kreuz && winningCard.value === CardValue.Bube) {
              if (winnerTeam === 'Re') rePoints.push('Karlchen');
              else if (winnerTeam === 'Kontra') kontraPoints.push('Karlchen');
+             notifications.push('Karlchen am End');
         }
     }
 
-    return { re: rePoints, kontra: kontraPoints };
+    return { re: rePoints, kontra: kontraPoints, notifications };
   }
 
   static calculateGameResult(state: GameState): GameState {

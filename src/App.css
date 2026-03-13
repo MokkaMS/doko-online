@@ -187,10 +187,10 @@ body { margin: 0; padding: 0; background: var(--bg-color); color: var(--text-col
 .card-corner.bottom { align-self: flex-end; transform: rotate(180deg); }
 .card-center { font-size: 40px; text-align: center; flex: 1; display: flex; align-items: center; justify-content: center; }
 
-.hand { display: flex; justify-content: center; position: absolute; bottom: 10px; width: 100%; z-index: 100; pointer-events: none; }
-.hand .card { margin-left: -45px; cursor: pointer; pointer-events: auto; transition: 0.2s; }
+.hand { display: flex; justify-content: center; position: absolute; bottom: 0; width: 100vw; z-index: 100; pointer-events: none; flex-wrap: nowrap; overflow: visible; padding-bottom: 5px; }
+.hand .card { margin-left: -4vw; cursor: pointer; pointer-events: auto; transition: 0.2s; max-width: 95px; width: 9vw; min-width: 50px; height: auto; aspect-ratio: 95 / 140; }
 .hand .card:first-child { margin-left: 0; }
-.hand .card:hover { transform: translateY(-50px) scale(1.1); z-index: 110; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+.hand .card:hover { transform: translateY(-30px) scale(1.1); z-index: 110; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
 
 /* Trick Cards on Table */
 .trick { width: 100%; height: 100%; position: relative; pointer-events: none; }
@@ -259,12 +259,13 @@ body { margin: 0; padding: 0; background: var(--bg-color); color: var(--text-col
 .trick-card-label { font-size: 13px; font-weight: bold; background: rgba(0,0,0,0.8); padding: 2px 8px; border-radius: 4px; }
 
 /* UI Overlays */
-.game-actions { position: absolute; top: 60px; width: 100%; display: flex; justify-content: center; z-index: 200; pointer-events: none; } /* Moved top to 60px */
+.game-actions { position: absolute; top: 60px; width: 100%; display: flex; justify-content: center; z-index: 200; pointer-events: none; left: 50%; transform: translateX(-50%); max-width: 90vw; flex-wrap: wrap; } /* Positioned relative to game-container */
 .game-actions > * { pointer-events: auto; }
+.game-actions h3 { font-size: 20px; text-align: center; }
 .ansage-btn { padding: 12px 25px; font-size: 18px; font-weight: bold; border-radius: 10px; cursor: pointer; border: 2px solid var(--text-color); color: var(--text-color); box-shadow: var(--button-shadow); margin: 0 10px; }
 .ansage-btn.re { background: var(--badge-rekontra-bg); color: white; border-color: white; }
 .ansage-btn.kontra { background: var(--badge-bid-bg); color: white; border-color: white; }
-.bidding-area { background: var(--bidding-area-bg); padding: 20px 40px; border-radius: 15px; border: 2px solid var(--bidding-area-border); pointer-events: auto; color: var(--text-color); }
+.bidding-area { background: var(--bidding-area-bg); padding: 20px 40px; border-radius: 15px; border: 2px solid var(--bidding-area-border); pointer-events: auto; color: var(--text-color); display: flex; flex-direction: column; align-items: center; justify-content: center; }
 
 .hochzeit-highlight {
   background-color: #ffeb3b !important;
@@ -360,8 +361,8 @@ body { margin: 0; padding: 0; background: var(--bg-color); color: var(--text-col
 
 .controls {
   position: absolute;
-  top: 60px; /* Moved down to avoid overlapping the new stripe */
-  right: 20px;
+  top: 50px; /* Moved up to align with opponents stripe */
+  right: 10px;
   z-index: 200;
   display: flex;
   flex-direction: column;

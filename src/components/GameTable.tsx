@@ -197,6 +197,66 @@ export const GameTable: React.FC = () => {
         </div>
       </div>
 
+      <div className="game-actions">
+        {state.phase === 'Playing' && humanPlayer?.hand?.length >= 10 && !state.reKontraAnnouncements[humanPlayer.id] && (
+           <div className="re-kontra-buttons">
+             {humanPlayer.team === 'Re' && <button className="ansage-btn re" onClick={() => announceReKontra(humanPlayer.id, 'Re')}>RE Ansagen</button>}
+             {humanPlayer.team === 'Kontra' && <button className="ansage-btn kontra" onClick={() => announceReKontra(humanPlayer.id, 'Kontra')}>KONTRA Ansagen</button>}
+           </div>
+        )}
+        {state.phase === 'Bidding' && state.currentPlayerIndex === state.players.findIndex(p => p.id === humanPlayer.id) && (
+          <div className="bidding-area">
+            <h3>Wähle deinen Vorbehalt:</h3>
+            {!showFarbenSoloSelection ? (
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                  <button onClick={() => submitBid(humanPlayer.id, 'Gesund')}>Gesund</button>
+                  {hasBothReQueens && <button className="hochzeit-highlight" onClick={() => submitBid(humanPlayer.id, 'Hochzeit')}>Hochzeit</button>}
+                  <button onClick={() => submitBid(humanPlayer.id, 'DamenSolo')}>Damen-Solo</button>
+                  <button onClick={() => submitBid(humanPlayer.id, 'BubenSolo')}>Buben-Solo</button>
+                  <button onClick={() => submitBid(humanPlayer.id, 'DamenBubensolo')}>Damen-Buben-Solo</button>
+                  <button onClick={handleFarbenSoloClick}>Farben-Solo</button>
+                  <button onClick={() => submitBid(humanPlayer.id, 'Fleischlos')}>Fleischlos</button>
+                </div>
+            ) : (
+                <div className="suit-selection">
+                    <h4>Wähle Solo-Farbe:</h4>
+                    <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+                        <button onClick={() => handleSuitSelect(Suit.Kreuz)}>Kreuz ♣</button>
+                        <button onClick={() => handleSuitSelect(Suit.Pik)}>Pik ♠</button>
+                        <button onClick={() => handleSuitSelect(Suit.Herz)}>Herz ♥</button>
+                        <button onClick={() => handleSuitSelect(Suit.Karo)}>Karo ♦</button>
+                        <button onClick={() => setShowFarbenSoloSelection(false)} style={{backgroundColor: '#666'}}>Zurück</button>
+                    </div>
+                </div>
+            )}
+          </div>
+        )}
+        {state.phase === 'Bidding' && state.currentPlayerIndex !== state.players.findIndex(p => p.id === humanPlayer.id) && (
+             <div className="bidding-area">Warte auf andere Spieler...</div>
+        )}
+      </div>
+
+      <div className="controls">
+        <button onClick={toggleTheme} className="icon-btn" title="Theme">
+          {theme === 'classic' ? '🌓' : '☀'}
+        </button>
+        <button onClick={goToMainMenu} className="icon-btn" title="Hauptmenü">
+          ☰
+        </button>
+      </div>
+
+      <div className="hand">
+        {sortedHand.map(card => (
+          <CardComponent
+            key={card.id}
+            card={card}
+            onClick={handlePlayCard}
+            disabled={state.phase !== 'Playing' || isProcessing || state.currentTrick.length >= 4 || state.currentPlayerIndex !== localPlayerIndex}
+            className={selectedCardId === card.id ? 'selected' : ''}
+          />
+        ))}
+      </div>
+
       <div
         className="game-board-scaler"
         style={{
@@ -207,45 +267,6 @@ export const GameTable: React.FC = () => {
           position: 'relative'
         }}
       >
-        <div className="game-actions">
-          {state.phase === 'Playing' && humanPlayer?.hand?.length >= 10 && !state.reKontraAnnouncements[humanPlayer.id] && (
-             <div className="re-kontra-buttons">
-               {humanPlayer.team === 'Re' && <button className="ansage-btn re" onClick={() => announceReKontra(humanPlayer.id, 'Re')}>RE Ansagen</button>}
-               {humanPlayer.team === 'Kontra' && <button className="ansage-btn kontra" onClick={() => announceReKontra(humanPlayer.id, 'Kontra')}>KONTRA Ansagen</button>}
-             </div>
-          )}
-          {state.phase === 'Bidding' && state.currentPlayerIndex === state.players.findIndex(p => p.id === humanPlayer.id) && (
-            <div className="bidding-area">
-              <h3>Wähle deinen Vorbehalt:</h3>
-              {!showFarbenSoloSelection ? (
-                  <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
-                    <button onClick={() => submitBid(humanPlayer.id, 'Gesund')}>Gesund</button>
-                    {hasBothReQueens && <button className="hochzeit-highlight" onClick={() => submitBid(humanPlayer.id, 'Hochzeit')}>Hochzeit</button>}
-                    <button onClick={() => submitBid(humanPlayer.id, 'DamenSolo')}>Damen-Solo</button>
-                    <button onClick={() => submitBid(humanPlayer.id, 'BubenSolo')}>Buben-Solo</button>
-                    <button onClick={() => submitBid(humanPlayer.id, 'DamenBubensolo')}>Damen-Buben-Solo</button>
-                    <button onClick={handleFarbenSoloClick}>Farben-Solo</button>
-                    <button onClick={() => submitBid(humanPlayer.id, 'Fleischlos')}>Fleischlos</button>
-                  </div>
-              ) : (
-                  <div className="suit-selection">
-                      <h4>Wähle Solo-Farbe:</h4>
-                      <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
-                          <button onClick={() => handleSuitSelect(Suit.Kreuz)}>Kreuz ♣</button>
-                          <button onClick={() => handleSuitSelect(Suit.Pik)}>Pik ♠</button>
-                          <button onClick={() => handleSuitSelect(Suit.Herz)}>Herz ♥</button>
-                          <button onClick={() => handleSuitSelect(Suit.Karo)}>Karo ♦</button>
-                          <button onClick={() => setShowFarbenSoloSelection(false)} style={{backgroundColor: '#666'}}>Zurück</button>
-                      </div>
-                  </div>
-              )}
-            </div>
-          )}
-          {state.phase === 'Bidding' && state.currentPlayerIndex !== state.players.findIndex(p => p.id === humanPlayer.id) && (
-               <div className="bidding-area">Warte auf andere Spieler...</div>
-          )}
-        </div>
-
         <div className="table">
           <div className="trick">
             {state.currentTrick.map((card, i) => {
@@ -279,27 +300,6 @@ export const GameTable: React.FC = () => {
             {popupText}
           </div>
         )}
-
-        <div className="hand">
-          {sortedHand.map(card => (
-            <CardComponent
-              key={card.id}
-              card={card}
-              onClick={handlePlayCard}
-              disabled={state.phase !== 'Playing' || isProcessing || state.currentTrick.length >= 4 || state.currentPlayerIndex !== localPlayerIndex}
-              className={selectedCardId === card.id ? 'selected' : ''}
-            />
-          ))}
-        </div>
-
-        <div className="controls">
-          <button onClick={toggleTheme} className="icon-btn" title="Theme">
-            {theme === 'classic' ? '🌓' : '☀'}
-          </button>
-          <button onClick={goToMainMenu} className="icon-btn" title="Hauptmenü">
-            ☰
-          </button>
-        </div>
 
         {state.phase === 'Scoring' && state.lastGameResult && (
           <div className="scoring-overlay">

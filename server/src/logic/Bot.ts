@@ -106,9 +106,51 @@ export class Bot {
         }
       }
 
-      const fehlAces = myFehl.filter(c => c.value === CardValue.Ass);
-      if (fehlAces.length > 0) {
-        return fehlAces[0];
+      // If it's early in the game (0-2 tricks played), prioritize playing a Fehl-Ass that has a low probability of being trumped
+      // Depending on settings, hand size can be 10 or 12. So we check if less than 3 cards played.
+      const initialHandSize = settings.mitNeunen ? 12 : 10;
+      if (initialHandSize - player.hand.length < 3) {
+        const fehlAces = myFehl.filter(c => c.value === CardValue.Ass);
+        if (fehlAces.length > 0) {
+          // Group by suit and count total Fehl cards in that suit in hand
+          const suitCounts: Record<Suit, number> = {
+            [Suit.Kreuz]: 0,
+            [Suit.Pik]: 0,
+            [Suit.Herz]: 0,
+            [Suit.Karo]: 0,
+          };
+
+          player.hand.forEach(c => {
+            if (!isTrump(c, state.gameType, state.trumpSuit, settings)) {
+              suitCounts[c.suit]++;
+            }
+          });
+
+          // Find the best Ace to play
+          let bestAce = fehlAces[0];
+          let minCount = Infinity;
+
+          for (const ace of fehlAces) {
+             let count = suitCounts[ace.suit];
+
+             // Herz should be picked last. We can artificially inflate its count.
+             if (ace.suit === Suit.Herz) {
+               count += 1000;
+             }
+
+             if (count < minCount) {
+               minCount = count;
+               bestAce = ace;
+             }
+          }
+
+          return bestAce;
+        }
+      } else {
+        const fehlAces = myFehl.filter(c => c.value === CardValue.Ass);
+        if (fehlAces.length > 0) {
+          return fehlAces[0];
+        }
       }
 
       return legalMoves.sort((a, b) => getCardPower(a, state.gameType, state.trumpSuit, settings) - getCardPower(b, state.gameType, state.trumpSuit, settings))[0];

@@ -25,7 +25,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ showMultiplayer, setShowMult
            <button className="menu-button" onClick={resumeGame}>Weiterspielen</button>
         )}
         <button className="menu-button" onClick={toggleTheme}>
-          {theme === 'classic' ? 'Wechsel zu Minimal' : 'Wechsel zu Klassisch'}
+          {theme === 'classic' ? 'Minimal' : 'Klassisch'}
         </button>
       </div>
     </div>

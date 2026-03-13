@@ -27,12 +27,14 @@ export const createDeck = (mitNeunen: boolean): Card[] => {
 
   // Jede Karte gibt es doppelt
   for (let i = 0; i < 2; i++) {
+    const iStr = i.toString();
     for (const suit of suits) {
+      const suitPrefix = suit + '-';
       for (const value of values) {
         deck.push({
           suit,
           value,
-          id: `${suit}-${value}-${i}`,
+          id: suitPrefix + value + '-' + iStr,
         });
       }
     }

@@ -5,8 +5,15 @@ export const getStoredPlayerId = (): string => {
   if (!storedId) {
     if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
       storedId = crypto.randomUUID();
+    } else if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
+      const bytes = new Uint8Array(16);
+      crypto.getRandomValues(bytes);
+      storedId = Array.from(bytes)
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
     } else {
-      storedId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+      // Insecure fallback only for extremely old browsers or non-secure contexts
+      storedId = Date.now().toString(36) + Math.random().toString(36).substring(2, 15);
     }
     localStorage.setItem(STORAGE_KEY, storedId);
   }

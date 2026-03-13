@@ -138,11 +138,11 @@ const handleBotTurns = (roomId: string) => {
       if (announcement) {
         if (announcement === 'Re' && state.rePlayerIds.includes(p.id)) {
            state.reKontraAnnouncements[p.id] = 'Re';
-           state.notifications.push({ id: Date.now() + Math.random(), text: `${p.name} sagt Re!` });
+           state.notifications.push({ id: Date.now() + crypto.randomInt(1000), text: `${p.name} sagt Re!` });
            io.to(roomId).emit('game_state_update', state);
         } else if (announcement === 'Kontra' && state.kontraPlayerIds.includes(p.id)) {
            state.reKontraAnnouncements[p.id] = 'Kontra';
-           state.notifications.push({ id: Date.now() + Math.random(), text: `${p.name} sagt Kontra!` });
+           state.notifications.push({ id: Date.now() + crypto.randomInt(1000), text: `${p.name} sagt Kontra!` });
            io.to(roomId).emit('game_state_update', state);
         }
       }

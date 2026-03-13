@@ -74,8 +74,37 @@ describe('storage utils', () => {
       });
     });
 
-    it('should generate and store a fallback ID if crypto.randomUUID is not available', () => {
-       // Mock crypto to be undefined or missing randomUUID
+    it('should generate and store a fallback ID using crypto.getRandomValues if crypto.randomUUID is not available', () => {
+      // Mock crypto to have getRandomValues but not randomUUID
+      const originalCrypto = globalThis.crypto;
+      const mockGetRandomValues = vi.fn((buffer: Uint8Array) => {
+        for (let i = 0; i < buffer.length; i++) buffer[i] = i;
+        return buffer;
+      });
+
+      Object.defineProperty(globalThis, 'crypto', {
+        value: {
+          getRandomValues: mockGetRandomValues,
+        },
+        configurable: true
+      });
+
+      const result = getStoredPlayerId();
+
+      // bytes 0-15 in hex: 000102030405060708090a0b0c0d0e0f
+      expect(result).toBe('000102030405060708090a0b0c0d0e0f');
+      expect(localStorage.getItem(STORAGE_KEY)).toBe(result);
+      expect(mockGetRandomValues).toHaveBeenCalled();
+
+      // Restore
+      Object.defineProperty(globalThis, 'crypto', {
+        value: originalCrypto,
+        configurable: true
+      });
+    });
+
+    it('should generate and store a fallback ID if crypto is not available at all', () => {
+       // Mock crypto to be undefined
        const originalCrypto = globalThis.crypto;
        Object.defineProperty(globalThis, 'crypto', {
         value: undefined,

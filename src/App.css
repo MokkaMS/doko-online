@@ -390,6 +390,13 @@ body { margin: 0; padding: 0; background: var(--bg-color); color: var(--text-col
   transform: var(--button-hover-scale);
 }
 
+.fullscreen-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
 /* Scoring Overlay */
 .scoring-overlay {
   position: fixed;

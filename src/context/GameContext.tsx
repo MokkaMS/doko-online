@@ -35,6 +35,7 @@ interface GameContextType {
   togglePublic: () => void;
   kickPlayer: (targetId: string) => void;
   refreshPublicRooms: () => void;
+  updateBotName: (botId: string, newName: string) => void;
   playerId: string | null;
 }
 
@@ -267,6 +268,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (roomId) socket.emit('kick_player', { roomId, targetId });
   }, [roomId]);
 
+  const updateBotName = useCallback((botId: string, newName: string) => {
+      if (roomId) socket.emit('update_bot_name', { roomId, botId, newName });
+  }, [roomId]);
+
   const refreshPublicRooms = useCallback(() => {
       if (!socket.connected) socket.connect();
       socket.emit('get_public_rooms');
@@ -297,7 +302,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         addBotMultiplayer,
         togglePublic,
         kickPlayer,
-        refreshPublicRooms
+        refreshPublicRooms,
+        updateBotName
     }}>
       {children}
     </GameContext.Provider>

@@ -3,9 +3,16 @@ import { useGame } from '../context/GameContext';
 import './WaitingRoom.css';
 
 export const WaitingRoom: React.FC = () => {
-  const { state, roomId, hostId, isPublic, startGameMultiplayer, addBotMultiplayer, togglePublic, kickPlayer, goToMainMenu, playerId } = useGame();
+  const { state, roomId, hostId, isPublic, startGameMultiplayer, addBotMultiplayer, togglePublic, kickPlayer, goToMainMenu, playerId, updateBotName } = useGame();
   
   const isHost = playerId === hostId;
+
+  const handleNameChange = (botId: string, currentName: string) => {
+    const newName = prompt('Neuer Name für den Bot:', currentName);
+    if (newName !== null && newName.trim() !== '') {
+      updateBotName(botId, newName.trim());
+    }
+  };
 
   return (
     <div className="game-container main-menu">
@@ -25,8 +32,19 @@ export const WaitingRoom: React.FC = () => {
         <ul className="player-list">
             {state.players.map((p, idx) => (
                 <li key={idx} className={`player-item ${p.id === playerId ? 'current-player' : ''}`} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-                    <span>
-                        {p.name} {p.id === playerId && '(Du)'} {p.isBot && '(Bot)'} {p.id === hostId && '👑'}
+                    <span style={{ display: 'flex', alignItems: 'center' }}>
+                        {p.isBot && isHost ? (
+                          <span
+                            style={{ cursor: 'pointer', textDecoration: 'underline' }}
+                            onClick={() => handleNameChange(p.id, p.name)}
+                            title="Name ändern"
+                          >
+                            {p.name}
+                          </span>
+                        ) : (
+                          p.name
+                        )}
+                        {' '}{p.id === playerId && '(Du)'} {p.isBot && '(Bot)'} {p.id === hostId && '👑'}
                         {p.connected === false && <span style={{color: '#ff6b6b', marginLeft: '8px', fontSize: '0.9em'}}>(Getrennt)</span>}
                     </span>
                     {isHost && p.id !== playerId && (

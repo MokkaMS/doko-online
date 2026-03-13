@@ -534,6 +534,36 @@ io.on('connection', (socket: Socket) => {
     }
   });
 
+  socket.on('update_bot_name', ({ roomId, botId, newName }: { roomId: string, botId: string, newName: string }) => {
+    const roomIdError = validateRoomId(roomId);
+    if (roomIdError) {
+      socket.emit('error', roomIdError);
+      return;
+    }
+
+    const nameError = validatePlayerName(newName);
+    if (nameError) {
+      socket.emit('error', nameError);
+      return;
+    }
+
+    const room = rooms[roomId];
+    if (room) {
+      // Validate host
+      const requester = room.players.find(p => p.socketId === socket.id);
+      if (!requester || requester.id !== room.hostId) {
+        socket.emit('error', 'Only the host can update bot names.');
+        return;
+      }
+
+      const bot = room.players.find(p => p.id === botId);
+      if (bot && bot.isBot) {
+        bot.name = newName.trim();
+        io.to(roomId).emit('player_joined', room.players);
+      }
+    }
+  });
+
   socket.on('add_bot', (roomId: string) => {
     const roomIdError = validateRoomId(roomId);
     if (roomIdError) {

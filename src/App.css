@@ -266,6 +266,27 @@ body { margin: 0; padding: 0; background: var(--bg-color); color: var(--text-col
 .ansage-btn.kontra { background: var(--badge-bid-bg); color: white; border-color: white; }
 .bidding-area { background: var(--bidding-area-bg); padding: 20px 40px; border-radius: 15px; border: 2px solid var(--bidding-area-border); pointer-events: auto; color: var(--text-color); }
 
+.hochzeit-highlight {
+  background-color: #ffeb3b !important;
+  color: #000 !important;
+  font-weight: bold;
+  border: 2px solid #ff9800 !important;
+  animation: pulseHochzeit 1.5s infinite;
+  box-shadow: 0 0 15px rgba(255, 235, 59, 0.8);
+  transform: scale(1.05);
+}
+
+@keyframes pulseHochzeit {
+  0% { box-shadow: 0 0 15px rgba(255, 235, 59, 0.8); transform: scale(1.05); }
+  50% { box-shadow: 0 0 30px rgba(255, 235, 59, 1); transform: scale(1.1); }
+  100% { box-shadow: 0 0 15px rgba(255, 235, 59, 0.8); transform: scale(1.05); }
+}
+
+.hochzeit-highlight:hover {
+  background-color: #ffc107 !important;
+  transform: scale(1.15) !important;
+}
+
 .notification-container {
   position: fixed;
   top: 80px;

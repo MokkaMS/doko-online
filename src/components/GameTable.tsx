@@ -220,7 +220,7 @@ export const GameTable: React.FC = () => {
               {!showFarbenSoloSelection ? (
                   <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
                     <button onClick={() => submitBid(humanPlayer.id, 'Gesund')}>Gesund</button>
-                    {hasBothReQueens && <button onClick={() => submitBid(humanPlayer.id, 'Hochzeit')}>Hochzeit</button>}
+                    {hasBothReQueens && <button className="hochzeit-highlight" onClick={() => submitBid(humanPlayer.id, 'Hochzeit')}>Hochzeit</button>}
                     <button onClick={() => submitBid(humanPlayer.id, 'DamenSolo')}>Damen-Solo</button>
                     <button onClick={() => submitBid(humanPlayer.id, 'BubenSolo')}>Buben-Solo</button>
                     <button onClick={() => submitBid(humanPlayer.id, 'DamenBubensolo')}>Damen-Buben-Solo</button>

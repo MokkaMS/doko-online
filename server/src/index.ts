@@ -251,9 +251,11 @@ const executePlayCard = (roomId: string, playerId: string, card: Card) => {
       winner.tricks.push(state.currentTrick);
 
       // Hochzeit: Find partner in first 3 tricks
-      const totalTricksCompleted = state.players.reduce((sum, p) => sum + p.tricks.length, 0);
       if (state.gameType === GameType.Hochzeit && state.rePlayerIds.length === 1) {
-        const winner = state.players[winnerIndex];
+        let totalTricksCompleted = 0;
+        for (let i = 0; i < state.players.length; i++) {
+          totalTricksCompleted += state.players[i].tricks.length;
+        }
         if (totalTricksCompleted <= 3) {
           if (!state.rePlayerIds.includes(winner.id)) {
             state.rePlayerIds.push(winner.id);

@@ -31,13 +31,28 @@ const App: React.FC = () => {
   }, []);
 
   const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch((err) => {
-        console.error(`Error attempting to enable full-screen mode: ${err.message}`);
-      });
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+                  (navigator.userAgent.includes("Mac") && "ontouchend" in document);
+
+    if (isIOS) {
+      // Use pseudo-fullscreen for iOS
+      const body = document.body;
+      if (body.classList.contains('ios-pseudo-fullscreen')) {
+        body.classList.remove('ios-pseudo-fullscreen');
+        setIsFullscreen(false);
+      } else {
+        body.classList.add('ios-pseudo-fullscreen');
+        setIsFullscreen(true);
+      }
     } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch((err) => {
+          console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+        });
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
       }
     }
   };

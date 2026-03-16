@@ -281,16 +281,33 @@ export class GameEngine {
         });
     }
 
-    // 3. Karlchen
-    if (settings.karlchen && isLastTrick) {
-        const cardIndex = (winnerIndex - starterIndex + 4) % 4;
-        const winningCard = trick[cardIndex];
+    // 3. Karlchen and Karlchen gefangen
+    if (isLastTrick) {
+        trick.forEach((card, i) => {
+            if (card.suit === Suit.Kreuz && card.value === CardValue.Bube) {
+                const playerIdx = (starterIndex + i) % 4;
+                const player = players[playerIdx];
 
-        if (winningCard.suit === Suit.Kreuz && winningCard.value === CardValue.Bube) {
-             if (winnerTeam === 'Re') rePoints.push('Karlchen');
-             else if (winnerTeam === 'Kontra') kontraPoints.push('Karlchen');
-             notifications.push('Karlchen am End');
-        }
+                if (playerIdx === winnerIndex) {
+                    // Karlchen am End (The person playing Karlchen also won the trick)
+                    if (settings.karlchen) {
+                        if (winnerTeam === 'Re') rePoints.push('Karlchen');
+                        else if (winnerTeam === 'Kontra') kontraPoints.push('Karlchen');
+                        notifications.push('Karlchen am End');
+                    }
+                } else {
+                    // Karlchen played, but someone else won the trick
+                    if (settings.karlchenGefangen) {
+                        // Check if the winner is on the opposing team of the Karlchen player
+                        if (player.team !== winnerTeam && player.team !== 'Unknown' && winnerTeam !== 'Unknown') {
+                            if (winnerTeam === 'Re') rePoints.push('Karlchen gefangen');
+                            else if (winnerTeam === 'Kontra') kontraPoints.push('Karlchen gefangen');
+                            notifications.push('Karlchen gefangen');
+                        }
+                    }
+                }
+            }
+        });
     }
 
     return { re: rePoints, kontra: kontraPoints, notifications };

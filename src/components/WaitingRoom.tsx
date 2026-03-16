@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useGame } from '../context/GameContext';
 import './WaitingRoom.css';
 
 export const WaitingRoom: React.FC = () => {
-  const { state, roomId, hostId, isPublic, startGameMultiplayer, addBotMultiplayer, togglePublic, kickPlayer, goToMainMenu, playerId, updateBotName } = useGame();
+  const { state, roomId, hostId, isPublic, startGameMultiplayer, addBotMultiplayer, togglePublic, kickPlayer, goToMainMenu, playerId, updateBotName, settings, updateSettings } = useGame();
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   
   const isHost = playerId === hostId;
 
@@ -12,6 +13,11 @@ export const WaitingRoom: React.FC = () => {
     if (newName !== null && newName.trim() !== '') {
       updateBotName(botId, newName.trim());
     }
+  };
+
+  const toggleSetting = (settingName: keyof typeof settings) => {
+    if (!isHost) return;
+    updateSettings({ [settingName]: !settings[settingName] });
   };
 
   return (
@@ -86,9 +92,63 @@ export const WaitingRoom: React.FC = () => {
                     Warte auf Host...
                 </div>
             )}
+            <button className="menu-button" onClick={() => setIsSettingsOpen(true)}>Einstellungen</button>
             <button className="menu-button leave-room-btn" onClick={goToMainMenu}>Verlassen</button>
         </div>
       </div>
+
+      {isSettingsOpen && (
+        <div className="modal-overlay" onClick={() => setIsSettingsOpen(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <h2 style={{marginTop: 0, marginBottom: '20px'}}>Spieleinstellungen</h2>
+
+            <div className="settings-list">
+              <label className={`setting-item ${!isHost ? 'disabled' : ''}`}>
+                <div className="setting-info">
+                  <span className="setting-name">Mit Neunen</span>
+                  <span className="setting-desc">Spiele mit einem 48-Karten Deck (inklusive Neunen)</span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={settings.mitNeunen}
+                  onChange={() => toggleSetting('mitNeunen')}
+                  disabled={!isHost}
+                />
+              </label>
+
+              <label className={`setting-item ${!isHost ? 'disabled' : ''}`}>
+                <div className="setting-info">
+                  <span className="setting-name">Karlchen am End</span>
+                  <span className="setting-desc">Extrapunkt, wenn der Kreuz Bube den letzten Stich gewinnt</span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={settings.karlchen}
+                  onChange={() => toggleSetting('karlchen')}
+                  disabled={!isHost}
+                />
+              </label>
+
+              <label className={`setting-item ${!isHost ? 'disabled' : ''}`}>
+                <div className="setting-info">
+                  <span className="setting-name">Karlchen gefangen</span>
+                  <span className="setting-desc">Extrapunkt, wenn das Karlchen im letzten Stich von einem Gegner gestochen wird</span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={settings.karlchenGefangen}
+                  onChange={() => toggleSetting('karlchenGefangen')}
+                  disabled={!isHost}
+                />
+              </label>
+            </div>
+
+            <button className="menu-button" style={{marginTop: '25px', width: '100%'}} onClick={() => setIsSettingsOpen(false)}>
+              Schließen
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

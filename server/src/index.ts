@@ -85,6 +85,7 @@ const defaultSettings: GameSettings = {
   schweinchen: false,
   fuchsGefangen: true,
   karlchen: true,
+  karlchenGefangen: true,
   doppelkopfPunkte: true,
   soloPrioritaet: true,
 };
@@ -563,6 +564,28 @@ io.on('connection', (socket: Socket) => {
         bot.name = newName.trim();
         io.to(roomId).emit('player_joined', room.players);
       }
+    }
+  });
+
+  socket.on('update_settings', ({ roomId, settings }: { roomId: string, settings: Partial<GameSettings> }) => {
+    const roomIdError = validateRoomId(roomId);
+    if (roomIdError) {
+      socket.emit('error', roomIdError);
+      return;
+    }
+
+    const room = rooms[roomId];
+    if (room) {
+      // Validate host
+      const requester = room.players.find(p => p.socketId === socket.id);
+      if (!requester || requester.id !== room.hostId) {
+        socket.emit('error', 'Only the host can update settings.');
+        return;
+      }
+
+      // Merge new settings
+      room.settings = { ...room.settings, ...settings };
+      io.to(roomId).emit('settings_updated', room.settings);
     }
   });
 

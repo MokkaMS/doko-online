@@ -21,6 +21,7 @@ const defaultSettings: GameSettings = {
   schweinchen: false,
   fuchsGefangen: false,
   karlchen: false,
+  karlchenGefangen: false,
   doppelkopfPunkte: false,
   soloPrioritaet: false,
 };

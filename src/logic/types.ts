@@ -54,6 +54,7 @@ export interface GameSettings {
   schweinchen: boolean;
   fuchsGefangen: boolean;
   karlchen: boolean;
+  karlchenGefangen: boolean;
   doppelkopfPunkte: boolean;
   soloPrioritaet: boolean;
 }

@@ -26,6 +26,7 @@ interface GameContextType {
   reconnect: () => void;
   goToMainMenu: () => void;
   setSettings: (settings: GameSettings) => void;
+  updateSettings: (newSettings: Partial<GameSettings>) => void;
   openSettings: () => void;
   closeSettings: () => void;
   joinGame: (roomId: string, playerName: string) => void;
@@ -45,6 +46,7 @@ const defaultSettings: GameSettings = {
   schweinchen: false,
   fuchsGefangen: true,
   karlchen: true,
+  karlchenGefangen: true,
   doppelkopfPunkte: true,
   soloPrioritaet: true,
 };
@@ -156,6 +158,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setState(newState);
     });
     
+    socket.on('settings_updated', (newSettings: GameSettings) => {
+        setSettings(newSettings);
+    });
+
     socket.on('error', (msg: string) => {
         if (msg === 'Room not found') {
             setStoredRoomId(null);
@@ -165,6 +171,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return () => {
       socket.off('room_created');
+      socket.off('settings_updated');
       socket.off('joined_room');
       socket.off('player_joined');
       socket.off('room_update');
@@ -216,6 +223,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       socket.disconnect();
       socket.connect();
   }, []);
+
+  const updateSettings = useCallback((newSettings: Partial<GameSettings>) => {
+      if (roomId) {
+          socket.emit('update_settings', { roomId, settings: newSettings });
+      }
+  }, [roomId]);
 
   const goToMainMenu = useCallback(() => {
     if (roomId) {
@@ -294,6 +307,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         reconnect,
         goToMainMenu,
         setSettings,
+        updateSettings,
         openSettings,
         closeSettings,
         joinGame,

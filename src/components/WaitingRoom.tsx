@@ -5,14 +5,21 @@ import './WaitingRoom.css';
 export const WaitingRoom: React.FC = () => {
   const { state, roomId, hostId, isPublic, startGameMultiplayer, addBotMultiplayer, togglePublic, kickPlayer, goToMainMenu, playerId, updateBotName, settings, updateSettings } = useGame();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [renamingBotId, setRenamingBotId] = useState<string | null>(null);
+  const [renamingBotName, setRenamingBotName] = useState('');
   
   const isHost = playerId === hostId;
 
   const handleNameChange = (botId: string, currentName: string) => {
-    const newName = prompt('Neuer Name für den Bot:', currentName);
-    if (newName !== null && newName.trim() !== '') {
-      updateBotName(botId, newName.trim());
+    setRenamingBotId(botId);
+    setRenamingBotName(currentName);
+  };
+
+  const saveBotName = () => {
+    if (renamingBotId && renamingBotName.trim() !== '') {
+      updateBotName(renamingBotId, renamingBotName.trim());
     }
+    setRenamingBotId(null);
   };
 
   const toggleSetting = (settingName: keyof typeof settings) => {
@@ -146,6 +153,39 @@ export const WaitingRoom: React.FC = () => {
             <button className="menu-button" style={{marginTop: '25px', width: '100%'}} onClick={() => setIsSettingsOpen(false)}>
               Schließen
             </button>
+          </div>
+        </div>
+      )}
+
+      {renamingBotId && (
+        <div className="modal-overlay" onClick={() => setRenamingBotId(null)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <h2 style={{marginTop: 0, marginBottom: '20px'}}>Bot umbenennen</h2>
+            <input
+              type="text"
+              value={renamingBotName}
+              onChange={(e) => setRenamingBotName(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '10px',
+                fontSize: '18px',
+                borderRadius: '8px',
+                border: '1px solid #ccc',
+                marginBottom: '20px',
+                boxSizing: 'border-box',
+                background: 'var(--bg-color)',
+                color: 'var(--text-color)'
+              }}
+              autoFocus
+            />
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <button className="menu-button small" style={{ padding: '10px 20px', fontSize: '16px' }} onClick={() => setRenamingBotId(null)}>
+                Abbrechen
+              </button>
+              <button className="menu-button small" style={{ padding: '10px 20px', fontSize: '16px' }} onClick={saveBotName}>
+                Speichern
+              </button>
+            </div>
           </div>
         </div>
       )}

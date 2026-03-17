@@ -4,17 +4,28 @@ Willkommen zu dieser webbasierten Implementierung des beliebten Kartenspiels **D
 
 ## Features
 
-- **Multiplayer**: Erstellen Sie private Spielräume und laden Sie Freunde über eine Raum-ID ein.
-- **Bots**: Fehlende Mitspieler können jederzeit durch Computergegner aufgefüllt werden. Auch reine Bot-Runden (1 Spieler gegen 3 Bots) sind möglich.
+- **Multiplayer**:
+    - Erstellen Sie private Spielräume und laden Sie Freunde über eine Raum-ID ein.
+    - **Öffentliche Lobbys**: Erstellen Sie öffentliche Räume, die über eine Liste von anderen Spielern gefunden und betreten werden können.
+    - **Host-Rechte**: Der Raum-Host kann Spieler entfernen (kicken), Bots umbenennen und die Sichtbarkeit des Raums jederzeit ändern.
+    - **Wiederverbindung & Fortsetzen**: Verlorene Verbindungen können manuell wiederhergestellt und laufende Spiele nach dem Verlassen fortgesetzt werden.
+- **Bots**:
+    - Fehlende Mitspieler können jederzeit durch Computergegner aufgefüllt werden. Auch reine Bot-Runden (1 Spieler gegen 3 Bots) sind möglich.
+    - **Fortschrittliche KI**: Computergegner nutzen komplexe Strategien (z.B. Trümpfe ziehen, den "Fuchs" schützen oder fangen, intelligente Spielansagen wie Hochzeit/Solos sowie eigenständige Re/Kontra-Ansagen).
 - **Spielregeln**:
     - Unterstützt **Normalspiel**, **Hochzeit**, **Damen-Solo**, **Buben-Solo**, **Farben-Solo** und **Fleischlos**.
+    - **Spieloptionen**: Wahlweise mit 40 oder 48 Karten ("mit/ohne Neunen") spielbar.
     - Automatische Erkennung von Re/Kontra-Parteien.
     - Sonderpunkte: **Fuchs gefangen**, **Karlchen am End**, **Doppelkopf** (>40 Augen).
     - Pflichtansagen (Re/Kontra) vor der zweiten eigenen Karte.
 - **Benutzeroberfläche**:
     - Intuitive Bedienung per Mausklick oder Touch.
+    - **Themes**: Wahl zwischen dem klassischen (grünen) und einem minimalen (schwarz-weißen) Design.
+    - **Vollbildmodus**: Unterstützt nativen Vollbildmodus sowie eine spezielle Fallback-Lösung für iOS-Geräte, um das Spielerlebnis auf Mobilgeräten zu maximieren.
     - **Mobile Unterstützung**: Optimiert für Querformat (Landscape) auf Mobilgeräten.
     - Animationen für ausgespielte Stiche.
+- **Sicherheit**:
+    - Verwendung kryptografisch sicherer Zufallsgeneratoren für absolut faires Kartenmischen und sichere IDs.
 
 ## Installation & Start
 
@@ -76,6 +87,5 @@ docker-compose down
 
 - **Mobile Ausrichtung**: Das Spiel erfordert auf mobilen Geräten das Querformat (Landscape). Ein Warnhinweis blockiert die Ansicht im Hochformat.
 - **Speicherung**: Es gibt keine Datenbankanbindung. Spielstände und Statistiken werden nur im Arbeitsspeicher gehalten und gehen verloren, wenn der Server neu gestartet wird.
-- **Bots**: Die Computergegner spielen nach einer einfachen Heuristik und können komplexe Spielsituationen nicht immer optimal lösen.
 - **Chat**: Es gibt aktuell keine Chat-Funktion im Multiplayer-Modus.
 - **Re/Kontra Ansagen**: Ansagen müssen aktuell manuell über Buttons getätigt werden, bevor die zweite Karte gespielt wird.

@@ -5,6 +5,7 @@ import { WaitingRoom } from './components/WaitingRoom';
 import { MainMenu } from './components/MainMenu';
 import { GameTable } from './components/GameTable';
 import { LandscapeWarning } from './components/LandscapeWarning';
+import { toggleFullscreen as toggleFullscreenUtil } from './utils/fullscreen';
 
 const App: React.FC = () => {
   const { state } = useGame();
@@ -31,30 +32,7 @@ const App: React.FC = () => {
   }, []);
 
   const toggleFullscreen = () => {
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-                  (navigator.userAgent.includes("Mac") && "ontouchend" in document);
-
-    if (isIOS) {
-      // Use pseudo-fullscreen for iOS
-      const body = document.body;
-      if (body.classList.contains('ios-pseudo-fullscreen')) {
-        body.classList.remove('ios-pseudo-fullscreen');
-        setIsFullscreen(false);
-      } else {
-        body.classList.add('ios-pseudo-fullscreen');
-        setIsFullscreen(true);
-      }
-    } else {
-      if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch((err) => {
-          console.error(`Error attempting to enable full-screen mode: ${err.message}`);
-        });
-      } else {
-        if (document.exitFullscreen) {
-          document.exitFullscreen();
-        }
-      }
-    }
+    toggleFullscreenUtil(document, navigator, setIsFullscreen);
   };
 
   const renderContent = () => {

@@ -7,7 +7,7 @@ import crypto from 'crypto';
 import { GameEngine } from './logic/GameEngine';
 import { GameState, Card, GameSettings, GameType, Suit, CardValue } from './logic/types';
 import { Bot } from './logic/Bot';
-import { validatePlayerName, validateRoomId, validatePlayerId } from './utils/validation';
+import { validatePlayerName, validateRoomId, validatePlayerId, isValidOrigin } from './utils/validation';
 import {
   MAX_ROOMS,
   CREATE_ROOM_RATE_LIMIT,
@@ -20,9 +20,12 @@ import {
 
 const app = express();
 
-const allowedOrigins = process.env.CORS_ALLOWED_ORIGINS
-  ? process.env.CORS_ALLOWED_ORIGINS.split(',').map(o => o.trim())
-  : ["http://localhost:5173", "http://127.0.0.1:5173"];
+const defaultOrigins = ["http://localhost:5173", "http://127.0.0.1:5173"];
+const envOrigins = process.env.CORS_ALLOWED_ORIGINS
+  ? process.env.CORS_ALLOWED_ORIGINS.split(',').map(o => o.trim()).filter(isValidOrigin)
+  : [];
+
+const allowedOrigins = envOrigins.length > 0 ? envOrigins : defaultOrigins;
 
 app.use(cors({
   origin: allowedOrigins,

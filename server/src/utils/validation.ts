@@ -25,3 +25,19 @@ export const validatePlayerId = (playerId: string): string | null => {
   if (!/^[a-zA-Z0-9-]+$/.test(playerId)) return 'Player ID contains invalid characters';
   return null;
 };
+
+/**
+ * Validates a CORS origin string.
+ * It must be a valid URL starting with http:// or https:// and not be a wildcard.
+ */
+export const isValidOrigin = (origin: string): boolean => {
+  if (!origin || typeof origin !== 'string') return false;
+  if (origin === '*') return false;
+
+  try {
+    const url = new URL(origin);
+    return (url.protocol === 'http:' || url.protocol === 'https:') && url.hostname.length > 0;
+  } catch (e) {
+    return false;
+  }
+};

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "bun:test";
-import { validatePlayerName, validateRoomId, validatePlayerId } from "./validation";
+import { validatePlayerName, validateRoomId, validatePlayerId, isValidOrigin } from "./validation";
 
 describe("Validation Utils", () => {
   describe("validatePlayerName", () => {
@@ -67,6 +67,41 @@ describe("Validation Utils", () => {
     it("should reject invalid characters", () => {
       expect(validatePlayerId("player id")).toBe("Player ID contains invalid characters");
       expect(validatePlayerId("player@id")).toBe("Player ID contains invalid characters");
+    });
+  });
+
+  describe("isValidOrigin", () => {
+    it("should allow valid origins", () => {
+      expect(isValidOrigin("http://localhost:5173")).toBe(true);
+      expect(isValidOrigin("https://example.com")).toBe(true);
+      expect(isValidOrigin("http://127.0.0.1:3000")).toBe(true);
+    });
+
+    it("should reject wildcard", () => {
+      expect(isValidOrigin("*")).toBe(false);
+    });
+
+    it("should reject origins without protocol", () => {
+      expect(isValidOrigin("example.com")).toBe(false);
+      expect(isValidOrigin("localhost:5173")).toBe(false);
+    });
+
+    it("should reject malformed URLs", () => {
+      expect(isValidOrigin("not-a-url")).toBe(false);
+      expect(isValidOrigin("http://")).toBe(false);
+    });
+
+    it("should reject non-http/https protocols", () => {
+      expect(isValidOrigin("ftp://example.com")).toBe(false);
+      expect(isValidOrigin("javascript:alert(1)")).toBe(false);
+    });
+
+    it("should handle null/undefined/empty", () => {
+      expect(isValidOrigin("")).toBe(false);
+      // @ts-ignore
+      expect(isValidOrigin(null)).toBe(false);
+      // @ts-ignore
+      expect(isValidOrigin(undefined)).toBe(false);
     });
   });
 });

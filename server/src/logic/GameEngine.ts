@@ -63,6 +63,11 @@ export class GameEngine {
   }
 
   static determineFinalGameType(bids: Record<string, string>, playerIdsInOrder: string[]): { gameType: GameType, trumpSuit: Suit | null, soloPlayerId: string | null } {
+    const playerIndexMap: Record<string, number> = {};
+    playerIdsInOrder.forEach((pid, index) => {
+        playerIndexMap[pid] = index;
+    });
+
     const priorityOrder = [
       GameType.FarbenSolo,
       GameType.DamenBubensolo,
@@ -104,7 +109,7 @@ export class GameEngine {
         if (bidders.length > 0) {
             // Sort by position in playerIdsInOrder (priority to earlier players)
             const winner = bidders.sort((a, b) => {
-                return playerIdsInOrder.indexOf(a.pid) - playerIdsInOrder.indexOf(b.pid);
+                return playerIndexMap[a.pid] - playerIndexMap[b.pid];
             })[0];
 
             return { gameType: winner.type, trumpSuit: winner.trump, soloPlayerId: winner.pid };

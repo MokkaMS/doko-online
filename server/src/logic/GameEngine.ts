@@ -236,7 +236,11 @@ export class GameEngine {
   }
 
   static calculateTrickPoints(trick: Card[]): number {
-    return trick.reduce((sum, card) => sum + CARD_POINTS[card.value], 0);
+    let sum = 0;
+    for (let i = 0; i < trick.length; i++) {
+      sum += CARD_POINTS[trick[i].value];
+    }
+    return sum;
   }
 
   static checkTrickSpecialPoints(

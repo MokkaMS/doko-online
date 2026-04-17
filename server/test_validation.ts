@@ -1,4 +1,4 @@
-import { validatePlayerName } from './src/utils/validation';
+import { validatePlayerName, isValidOrigin } from './src/utils/validation';
 
 // Unit tests for validation logic
 const logicTests = [
@@ -26,6 +26,33 @@ if (failed) {
   process.exit(1);
 }
 console.log('Validation logic tests passed!\n');
+
+const originTests = [
+  { name: 'Valid localhost', input: 'http://localhost:5173', expected: true },
+  { name: 'Valid domain', input: 'https://example.com', expected: true },
+  { name: 'Wildcard', input: '*', expected: false },
+  { name: 'No protocol', input: 'example.com', expected: false },
+  { name: 'Invalid protocol', input: 'ftp://example.com', expected: false },
+  { name: 'Malformed', input: 'not-a-url', expected: false },
+  { name: 'Empty', input: '', expected: false },
+];
+
+console.log('Running isValidOrigin tests...');
+failed = false;
+originTests.forEach(t => {
+  const result = isValidOrigin(t.input);
+  if (result !== t.expected) {
+    console.error(`FAIL: ${t.name}. Expected ${t.expected}, got ${result}`);
+    failed = true;
+  } else {
+    console.log(`PASS: ${t.name}`);
+  }
+});
+
+if (failed) {
+  process.exit(1);
+}
+console.log('isValidOrigin tests passed!\n');
 
 // If we can run a full integration test, we would do it here.
 // But given the environment constraints, we will rely on the unit test of the logic

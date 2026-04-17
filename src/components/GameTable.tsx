@@ -127,9 +127,11 @@ export const GameTable: React.FC = () => {
     return sortCards(humanPlayer.hand, state.gameType, state.trumpSuit, settings);
   }, [humanPlayer?.hand, state.gameType, state.trumpSuit, settings]);
 
-  if (!humanPlayer) return <div className="game-container">Lade Spieler...</div>;
+  const hasBothReQueens = useMemo(() => {
+    return humanPlayer?.hand?.filter(c => c.suit === Suit.Kreuz && c.value === CardValue.Dame).length === 2;
+  }, [humanPlayer?.hand]);
 
-  const hasBothReQueens = humanPlayer?.hand?.filter(c => c.suit === Suit.Kreuz && c.value === CardValue.Dame).length === 2;
+  if (!humanPlayer) return <div className="game-container">Lade Spieler...</div>;
 
   return (
     <div className="game-container" onClick={(e) => {

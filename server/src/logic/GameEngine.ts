@@ -459,10 +459,17 @@ export class GameEngine {
     });
 
     // 8. Store Result
+    const winnerTeam: string[] = [];
+    for (let i = 0; i < newState.players.length; i++) {
+        if (newState.players[i].team === winner) {
+            winnerTeam.push(newState.players[i].id);
+        }
+    }
+
     const result: ScoringResult = {
         winner,
         winningPoints: netScore,
-        winnerTeam: newState.players.filter(p => p.team === winner).map(p => p.id),
+        winnerTeam,
         reAugen,
         kontraAugen,
         reSpecialPoints: state.specialPoints.re,

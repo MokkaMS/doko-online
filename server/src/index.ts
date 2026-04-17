@@ -200,13 +200,13 @@ const executePlayCard = (roomId: string, playerId: string, card: Card) => {
   // Security: Verify card exists in player's hand
   const cardInHand = currentPlayer.hand.find(c => c.id === card.id);
   if (!cardInHand) {
-    console.warn(`Player ${playerId} attempted to play a card not in hand: ${JSON.stringify(card)}`);
+    console.warn(`Player ${currentPlayer.name} attempted to play a card not in hand: ${JSON.stringify(card)}`);
     return;
   }
 
   // Security: Verify move is valid according to game rules
   if (!GameEngine.isValidMove(cardInHand, currentPlayer, state.currentTrick, state.gameType, state.trumpSuit, room.settings)) {
-    console.warn(`Player ${playerId} attempted an invalid move: ${JSON.stringify(cardInHand)}`);
+    console.warn(`Player ${currentPlayer.name} attempted an invalid move: ${JSON.stringify(cardInHand)}`);
     return;
   }
 
@@ -314,10 +314,10 @@ const executePlayCard = (roomId: string, playerId: string, card: Card) => {
 };
 
 io.on('connection', (socket: Socket) => {
-  console.log('User connected:', socket.id);
+  console.log('User connected');
 
   socket.on('create_room', ({ playerName, playerId }: { playerName: string, playerId: string }) => {
-    console.log(`[create_room] Request from ${playerName} (${playerId})`);
+    console.log(`[create_room] Request from ${playerName}`);
 
     const nameError = validatePlayerName(playerName);
     if (nameError) {
@@ -431,7 +431,7 @@ io.on('connection', (socket: Socket) => {
   });
 
   socket.on('join_room', ({ roomId, playerName, playerId }: { roomId: string, playerName: string, playerId: string }) => {
-    console.log(`[join_room] Request from ${playerName} (${playerId}) to join ${roomId}`);
+    console.log(`[join_room] Request from ${playerName} to join ${roomId}`);
 
     const nameError = validatePlayerName(playerName);
     if (nameError) {
@@ -715,7 +715,7 @@ io.on('connection', (socket: Socket) => {
         io.to(roomId).emit('room_update', { hostId: room.hostId, isPublic: room.isPublic });
         io.emit('public_rooms_update', getPublicRooms());
       } else {
-        console.log(`[toggle_public] Failed: User is not host or not in room. Host: ${room.hostId}, Requester: ${player?.id}`);
+        console.log(`[toggle_public] Failed: User is not host or not in room.`);
       }
     } else {
       console.log(`[toggle_public] Room ${roomId} not found`);
@@ -814,7 +814,7 @@ io.on('connection', (socket: Socket) => {
 
     const currentPlayer = state.players[state.currentPlayerIndex];
     if (currentPlayer.id !== playerId) {
-      console.warn(`Player ${playerId} attempted to bid out of turn. Expected: ${currentPlayer.id}`);
+      console.warn(`A player attempted to bid out of turn. Expected: ${currentPlayer.name}`);
       const playerSocket = room.players.find(p => p.id === playerId);
       if (playerSocket?.socketId) {
         io.to(playerSocket.socketId).emit('error', 'It is not your turn to bid.');
@@ -953,7 +953,7 @@ io.on('connection', (socket: Socket) => {
   });
 
   socket.on('disconnect', () => {
-    console.log('User disconnected:', socket.id);
+    console.log('User disconnected');
     lastRoomCreation.delete(socket.id);
 
     // Remove player from room? 

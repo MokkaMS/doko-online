@@ -76,9 +76,6 @@ export const GameTable: React.FC = () => {
   useEffect(() => {
     setIsProcessing(false);
     processingRef.current = false;
-    // Reset selection if the hand size changes (card played) or phase changes
-    // We can also reset on every state update to be safe, but that might be annoying if polling updates happen.
-    // Better: reset if the card is no longer in hand.
   }, [state]);
 
   // In Multiplayer, find "me". In Singleplayer, it is index 0.

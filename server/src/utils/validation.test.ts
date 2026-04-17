@@ -75,6 +75,10 @@ describe("Validation Utils", () => {
       expect(isValidOrigin("http://localhost:5173")).toBe(true);
       expect(isValidOrigin("https://example.com")).toBe(true);
       expect(isValidOrigin("http://127.0.0.1:3000")).toBe(true);
+      expect(isValidOrigin("http://[::1]")).toBe(true);
+      expect(isValidOrigin("https://example.com/")).toBe(true);
+      expect(isValidOrigin("HTTPS://EXAMPLE.COM")).toBe(true);
+      expect(isValidOrigin("https://user:pass@example.com")).toBe(true);
     });
 
     it("should reject wildcard", () => {
@@ -102,6 +106,11 @@ describe("Validation Utils", () => {
       expect(isValidOrigin(null)).toBe(false);
       // @ts-ignore
       expect(isValidOrigin(undefined)).toBe(false);
+    });
+
+    it("should reject non-URL strings", () => {
+      expect(isValidOrigin("localhost")).toBe(false);
+      expect(isValidOrigin("127.0.0.1")).toBe(false);
     });
   });
 });

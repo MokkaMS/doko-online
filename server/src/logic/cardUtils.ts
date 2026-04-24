@@ -1,5 +1,5 @@
 import { Card, CardValue, Suit, GameSettings, GameType } from './types';
-import crypto from 'crypto';
+import { randomInt } from 'node:crypto';
 
 export const CARD_POINTS: Record<CardValue, number> = {
   [CardValue.Ass]: 11,
@@ -43,7 +43,7 @@ export const createDeck = (mitNeunen: boolean): Card[] => {
 export const shuffle = (deck: Card[]): Card[] => {
   const newDeck = [...deck];
   for (let i = newDeck.length - 1; i > 0; i--) {
-    const j = crypto.randomInt(0, i + 1);
+    const j = randomInt(0, i + 1);
     [newDeck[i], newDeck[j]] = [newDeck[j], newDeck[i]];
   }
   return newDeck;

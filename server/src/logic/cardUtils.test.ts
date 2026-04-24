@@ -1,6 +1,22 @@
 import { describe, it, expect } from 'bun:test';
-import { createDeck } from './cardUtils';
+import { createDeck, shuffle } from './cardUtils';
 import { Suit, CardValue } from './types';
+
+describe('cardUtils.shuffle', () => {
+    it('should return a deck of the same length', () => {
+        const deck = createDeck(false);
+        const shuffled = shuffle(deck);
+        expect(shuffled.length).toBe(deck.length);
+    });
+
+    it('should change the order of cards', () => {
+        const deck = createDeck(true);
+        const shuffled = shuffle(deck);
+        // While theoretically possible for a shuffle to result in the same order,
+        // with 48 cards it's astronomically unlikely.
+        expect(shuffled).not.toEqual(deck);
+    });
+});
 
 describe('cardUtils.createDeck', () => {
     it('should create a deck with 40 cards when mitNeunen is false', () => {

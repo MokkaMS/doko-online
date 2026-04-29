@@ -77,6 +77,65 @@ Um den Container zu stoppen, verwenden Sie:
 docker-compose down
 ```
 
+## Im lokalen Netzwerk spielen (Lokaler Multiplayer)
+
+Sie können das Spiel so starten, dass andere Geräte (z.B. Smartphones oder andere Laptops) im selben WLAN- oder lokalen Netzwerk darauf zugreifen und mitspielen können.
+
+Dazu muss das Spiel mit der Umgebungsvariable `HOST_ON_NETWORK=true` gestartet werden.
+
+### 1. Eigene lokale IP-Adresse herausfinden
+
+Um anderen Spielern den Zugriff zu ermöglichen, benötigen Sie die lokale IP-Adresse des Computers, auf dem das Spiel läuft (der "Host").
+
+- **Windows**:
+  1. Öffnen Sie die Eingabeaufforderung (`cmd` oder PowerShell).
+  2. Geben Sie `ipconfig` ein und drücken Sie Enter.
+  3. Suchen Sie nach "IPv4-Adresse" (z.B. `192.168.178.20`).
+- **Mac**:
+  1. Öffnen Sie das Terminal.
+  2. Geben Sie `ifconfig | grep "inet " | grep -v 127.0.0.1` ein.
+  3. Ihre IP steht hinter `inet` (z.B. `192.168.178.20`).
+- **Linux**:
+  1. Öffnen Sie das Terminal.
+  2. Geben Sie `ip a` oder `hostname -I` ein.
+
+### 2. Spiel für das Netzwerk freigeben starten
+
+Starten Sie das Spiel je nach Betriebssystem und Methode mit dem entsprechenden Befehl:
+
+**Mit Node.js (npm start)**
+
+- **Mac / Linux:**
+  ```bash
+  HOST_ON_NETWORK=true npm start
+  ```
+- **Windows (cmd):**
+  ```cmd
+  set HOST_ON_NETWORK=true && npm start
+  ```
+- **Windows (PowerShell):**
+  ```powershell
+  $env:HOST_ON_NETWORK="true"; npm start
+  ```
+
+**Mit Docker**
+
+- **Alle Betriebssysteme:**
+  ```bash
+  HOST_ON_NETWORK=true docker-compose up --build -d
+  ```
+  *(Unter Windows PowerShell: `$env:HOST_ON_NETWORK="true"; docker-compose up --build -d`)*
+
+### 3. Mit dem Spiel verbinden
+
+Sobald der Server läuft, können andere Geräte in Ihrem Netzwerk dem Spiel beitreten.
+Öffnen Sie dazu den Browser auf dem anderen Gerät (z.B. dem Smartphone) und geben Sie die IP-Adresse des Hosts gefolgt von `:5173` ein.
+
+**Beispiel:**
+`http://192.168.178.20:5173`
+
+*(Ersetzen Sie `192.168.178.20` durch die in Schritt 1 ermittelte IP-Adresse des Hosts).*
+
 ## Technologien
 
 - **Frontend**: [React 19](https://react.dev/), [Vite](https://vitejs.dev/), TypeScript

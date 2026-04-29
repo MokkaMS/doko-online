@@ -42,8 +42,12 @@ export const createDeck = (mitNeunen: boolean): Card[] => {
 
 export const shuffle = (deck: Card[]): Card[] => {
   const newDeck = [...deck];
-  for (let i = newDeck.length - 1; i > 0; i--) {
-    const j = crypto.randomInt(0, i + 1);
+  const size = newDeck.length;
+  const randomValues = new Uint32Array(size);
+  crypto.getRandomValues(randomValues);
+
+  for (let i = size - 1; i > 0; i--) {
+    const j = randomValues[i] % (i + 1);
     [newDeck[i], newDeck[j]] = [newDeck[j], newDeck[i]];
   }
   return newDeck;

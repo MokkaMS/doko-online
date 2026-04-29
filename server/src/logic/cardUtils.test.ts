@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test';
-import { createDeck } from './cardUtils';
+import { createDeck, shuffle } from './cardUtils';
 import { Suit, CardValue } from './types';
 
 describe('cardUtils.createDeck', () => {
@@ -42,5 +42,46 @@ describe('cardUtils.createDeck', () => {
         Object.values(counts).forEach(count => {
             expect(count).toBe(2);
         });
+    });
+});
+
+describe('cardUtils.shuffle', () => {
+    it('should maintain the same number of cards', () => {
+        const deck = createDeck(true);
+        const shuffled = shuffle(deck);
+        expect(shuffled.length).toBe(deck.length);
+    });
+
+    it('should contain all original cards', () => {
+        const deck = createDeck(true);
+        const shuffled = shuffle(deck);
+        const originalIds = new Set(deck.map(c => c.id));
+        shuffled.forEach(card => {
+            expect(originalIds.has(card.id)).toBe(true);
+        });
+    });
+
+    it('should change the order of cards', () => {
+        const deck = createDeck(true);
+        const shuffled = shuffle(deck);
+
+        // It's statistically extremely unlikely that a 48-card deck
+        // remains in the exact same order after shuffling.
+        let isDifferent = false;
+        for (let i = 0; i < deck.length; i++) {
+            if (deck[i].id !== shuffled[i].id) {
+                isDifferent = true;
+                break;
+            }
+        }
+        expect(isDifferent).toBe(true);
+    });
+
+    it('should not mutate the original deck', () => {
+        const deck = createDeck(true);
+        const originalOrder = deck.map(c => c.id);
+        shuffle(deck);
+        const currentOrder = deck.map(c => c.id);
+        expect(currentOrder).toEqual(originalOrder);
     });
 });

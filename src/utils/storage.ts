@@ -5,12 +5,14 @@ export const getStoredPlayerId = (): string => {
   if (!storedId) {
     if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
       storedId = crypto.randomUUID();
-    } else {
+    } else if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
       const bytes = new Uint8Array(16);
       crypto.getRandomValues(bytes);
       storedId = Array.from(bytes)
         .map((b) => b.toString(16).padStart(2, '0'))
         .join('');
+    } else {
+      storedId = Date.now().toString() + Math.random().toString();
     }
     localStorage.setItem(STORAGE_KEY, storedId);
   }

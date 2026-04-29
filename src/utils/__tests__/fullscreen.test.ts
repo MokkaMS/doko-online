@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { toggleFullscreen } from '../fullscreen';
+import { toggleFullscreen, isIOSDevice } from '../fullscreen';
 
 describe('fullscreen utils', () => {
   let consoleSpy: any;
@@ -98,5 +98,49 @@ describe('fullscreen utils', () => {
 
     expect(mockDoc.exitFullscreen).toHaveBeenCalled();
     expect(mockDoc.documentElement.requestFullscreen).not.toHaveBeenCalled();
+  });
+
+  describe('isIOSDevice', () => {
+    it('should return true for iPhone user agent', () => {
+      const mockNav = { userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_6 like Mac OS X)' } as Navigator;
+      const mockDoc = {} as Document;
+      expect(isIOSDevice(mockNav, mockDoc)).toBe(true);
+    });
+
+    it('should return true for iPad user agent', () => {
+      const mockNav = { userAgent: 'Mozilla/5.0 (iPad; CPU OS 14_6 like Mac OS X)' } as Navigator;
+      const mockDoc = {} as Document;
+      expect(isIOSDevice(mockNav, mockDoc)).toBe(true);
+    });
+
+    it('should return true for iPod user agent', () => {
+      const mockNav = { userAgent: 'Mozilla/5.0 (iPod; CPU iPhone OS 14_6 like Mac OS X)' } as Navigator;
+      const mockDoc = {} as Document;
+      expect(isIOSDevice(mockNav, mockDoc)).toBe(true);
+    });
+
+    it('should return true for Mac user agent with touch support (iPad desktop mode)', () => {
+      const mockNav = { userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)' } as Navigator;
+      const mockDoc = { ontouchend: () => {} } as unknown as Document;
+      expect(isIOSDevice(mockNav, mockDoc)).toBe(true);
+    });
+
+    it('should return false for Mac user agent without touch support', () => {
+      const mockNav = { userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)' } as Navigator;
+      const mockDoc = {} as Document;
+      expect(isIOSDevice(mockNav, mockDoc)).toBe(false);
+    });
+
+    it('should return false for Windows user agent', () => {
+      const mockNav = { userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' } as Navigator;
+      const mockDoc = {} as Document;
+      expect(isIOSDevice(mockNav, mockDoc)).toBe(false);
+    });
+
+    it('should return false for Android user agent', () => {
+      const mockNav = { userAgent: 'Mozilla/5.0 (Linux; Android 11; Pixel 5)' } as Navigator;
+      const mockDoc = {} as Document;
+      expect(isIOSDevice(mockNav, mockDoc)).toBe(false);
+    });
   });
 });

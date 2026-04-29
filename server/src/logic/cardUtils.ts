@@ -10,8 +10,8 @@ export const CARD_POINTS: Record<CardValue, number> = {
   [CardValue.Neun]: 0,
 };
 
-const NORMAL_GAME_TYPES = [GameType.Normal, GameType.Hochzeit];
-const SOLO_GAME_TYPES = [GameType.DamenSolo, GameType.BubenSolo, GameType.DamenBubensolo, GameType.FarbenSolo];
+export const NORMAL_GAME_TYPES = [GameType.Normal, GameType.Hochzeit];
+export const SOLO_GAME_TYPES = [GameType.DamenSolo, GameType.BubenSolo, GameType.DamenBubensolo, GameType.FarbenSolo, GameType.Fleischlos];
 
 export const createDeck = (mitNeunen: boolean): Card[] => {
   const deck: Card[] = [];

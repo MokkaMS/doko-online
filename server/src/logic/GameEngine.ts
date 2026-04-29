@@ -1,5 +1,5 @@
 import { Card, GameState, GameType, Player, Suit, Team, GameSettings, CardValue, ScoringResult } from './types';
-import { createDeck, shuffle, isTrump, getCardPower, CARD_POINTS } from './cardUtils';
+import { createDeck, shuffle, isTrump, getCardPower, CARD_POINTS, SOLO_GAME_TYPES } from './cardUtils';
 
 export class GameEngine {
   static createInitialState(playerNames: string[], settings: GameSettings): GameState {
@@ -50,7 +50,7 @@ export class GameEngine {
   }
 
   static determineStartingPlayerIndex(gameType: GameType, dealerIndex: number, soloPlayerId: string | null, players: Player[]): number {
-    if ([GameType.DamenSolo, GameType.BubenSolo, GameType.DamenBubensolo, GameType.FarbenSolo, GameType.Fleischlos].includes(gameType)) {
+    if (SOLO_GAME_TYPES.includes(gameType)) {
       if (soloPlayerId) {
         const index = players.findIndex(p => p.id === soloPlayerId);
         if (index !== -1) {
@@ -413,50 +413,39 @@ export class GameEngine {
         netScore = kontraGamePoints - reGamePoints;
     }
 
-    const isSolo = [GameType.DamenSolo, GameType.BubenSolo, GameType.DamenBubensolo, GameType.FarbenSolo, GameType.Fleischlos].includes(state.gameType);
+    const isSolo = SOLO_GAME_TYPES.includes(state.gameType);
 
-    // Update Tournament Points
-    newState.players = newState.players.map(p => {
-        let pointsChange = 0;
+    // Pre-calculate points change for each team
+    let rePointsChange = 0;
+    let kontraPointsChange = 0;
 
-        if (isSolo) {
-            // Solo: Soloist (Re) gets 3x, Opponents (Kontra) get 1x.
-            // Signs depend on winner.
-
-            if (p.team === winner) {
-                 // Member of winning team
-                 if (p.team === 'Re') {
-                     // Soloist wins
-                     pointsChange = netScore * 3;
-                 } else {
-                     // Kontra wins (against Soloist)
-                     pointsChange = netScore;
-                 }
-            } else {
-                 // Member of losing team
-                 if (p.team === 'Re') {
-                     // Soloist lost
-                     // netScore is positive points for winner (Kontra).
-                     // Soloist loses netScore * 3
-                     pointsChange = -netScore * 3;
-                 } else {
-                     // Opponent lost (against Soloist)
-                     // netScore is positive points for winner (Re).
-                     // Opponent loses netScore
-                     pointsChange = -netScore;
-                 }
-            }
+    if (isSolo) {
+        if (winner === 'Re') {
+            rePointsChange = netScore * 3;
+            kontraPointsChange = -netScore;
         } else {
-             // Normal Scoring
-             if (p.team === winner) {
-                 pointsChange = netScore;
-             } else {
-                 pointsChange = -netScore;
-             }
+            rePointsChange = -netScore * 3;
+            kontraPointsChange = netScore;
         }
+    } else {
+        if (winner === 'Re') {
+            rePointsChange = netScore;
+            kontraPointsChange = -netScore;
+        } else {
+            rePointsChange = -netScore;
+            kontraPointsChange = netScore;
+        }
+    }
 
-        return { ...p, tournamentPoints: p.tournamentPoints + pointsChange };
-    });
+    // Update Tournament Points using a standard loop for performance
+    const playersCount = newState.players.length;
+    const updatedPlayers = new Array(playersCount);
+    for (let i = 0; i < playersCount; i++) {
+        const p = newState.players[i];
+        const pointsChange = p.team === 'Re' ? rePointsChange : kontraPointsChange;
+        updatedPlayers[i] = { ...p, tournamentPoints: p.tournamentPoints + pointsChange };
+    }
+    newState.players = updatedPlayers;
 
     // 8. Store Result
     const winnerTeam: string[] = [];

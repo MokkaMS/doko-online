@@ -20,6 +20,15 @@ describe("Validation Utils", () => {
     it("should reject invalid characters", () => {
       expect(validatePlayerName("Player@")).toBe("Player name contains invalid characters (only alphanumeric and spaces allowed)");
     });
+
+    it("should handle null/undefined/non-string", () => {
+      // @ts-ignore
+      expect(validatePlayerName(null)).toBe("Player name is required");
+      // @ts-ignore
+      expect(validatePlayerName(undefined)).toBe("Player name is required");
+      // @ts-ignore
+      expect(validatePlayerName(123)).toBe("Player name is required");
+    });
   });
 
   describe("validateRoomId", () => {
@@ -40,6 +49,15 @@ describe("Validation Utils", () => {
     it("should reject invalid characters", () => {
       expect(validateRoomId("AB-D")).toBe("Room ID contains invalid characters");
       expect(validateRoomId("AB D")).toBe("Room ID contains invalid characters");
+    });
+
+    it("should handle null/undefined/non-string", () => {
+      // @ts-ignore
+      expect(validateRoomId(null)).toBe("Room ID is required");
+      // @ts-ignore
+      expect(validateRoomId(undefined)).toBe("Room ID is required");
+      // @ts-ignore
+      expect(validateRoomId(123)).toBe("Room ID is required");
     });
   });
 
@@ -67,6 +85,15 @@ describe("Validation Utils", () => {
     it("should reject invalid characters", () => {
       expect(validatePlayerId("player id")).toBe("Player ID contains invalid characters");
       expect(validatePlayerId("player@id")).toBe("Player ID contains invalid characters");
+    });
+
+    it("should handle null/undefined/non-string", () => {
+      // @ts-ignore
+      expect(validatePlayerId(null)).toBe("Player ID is required");
+      // @ts-ignore
+      expect(validatePlayerId(undefined)).toBe("Player ID is required");
+      // @ts-ignore
+      expect(validatePlayerId(123)).toBe("Player ID is required");
     });
   });
 

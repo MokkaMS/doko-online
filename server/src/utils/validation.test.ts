@@ -1,5 +1,5 @@
 import { describe, it, expect } from "bun:test";
-import { validatePlayerName, validateRoomId, validatePlayerId, isValidOrigin } from "./validation";
+import { validatePlayerName, validateRoomId, validatePlayerId, isValidOrigin, validateBid } from "./validation";
 
 describe("Validation Utils", () => {
   describe("validatePlayerName", () => {
@@ -67,6 +67,41 @@ describe("Validation Utils", () => {
     it("should reject invalid characters", () => {
       expect(validatePlayerId("player id")).toBe("Player ID contains invalid characters");
       expect(validatePlayerId("player@id")).toBe("Player ID contains invalid characters");
+    });
+  });
+
+  describe("validateBid", () => {
+    it("should allow valid standard bids", () => {
+      expect(validateBid("Gesund")).toBeNull();
+      expect(validateBid("Hochzeit")).toBeNull();
+      expect(validateBid("DamenSolo")).toBeNull();
+      expect(validateBid("BubenSolo")).toBeNull();
+      expect(validateBid("DamenBubensolo")).toBeNull();
+      expect(validateBid("Fleischlos")).toBeNull();
+    });
+
+    it("should allow valid FarbenSolo bids", () => {
+      expect(validateBid("FarbenSolo_Kreuz")).toBeNull();
+      expect(validateBid("FarbenSolo_Pik")).toBeNull();
+      expect(validateBid("FarbenSolo_Herz")).toBeNull();
+      expect(validateBid("FarbenSolo_Karo")).toBeNull();
+    });
+
+    it("should reject invalid bid strings", () => {
+      expect(validateBid("InvalidBid")).toBe("Invalid bid value");
+      expect(validateBid("Solo")).toBe("Invalid bid value");
+    });
+
+    it("should reject malformed FarbenSolo bids", () => {
+      expect(validateBid("FarbenSolo_")).toBe("Invalid bid value");
+      expect(validateBid("FarbenSolo_Invalid")).toBe("Invalid bid value");
+      expect(validateBid("FarbenSolo")).toBe("Invalid bid value");
+    });
+
+    it("should reject empty or non-string bids", () => {
+      // @ts-ignore
+      expect(validateBid(null)).toBe("Bid is required");
+      expect(validateBid("")).toBe("Bid is required");
     });
   });
 

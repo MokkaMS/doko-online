@@ -25,7 +25,11 @@ const envOrigins = process.env.CORS_ALLOWED_ORIGINS
   ? process.env.CORS_ALLOWED_ORIGINS.split(',').map(o => o.trim()).filter(isValidOrigin)
   : [];
 
-const allowedOrigins = envOrigins.length > 0 ? envOrigins : defaultOrigins;
+let allowedOrigins: string[] | string = envOrigins.length > 0 ? envOrigins : defaultOrigins;
+
+if (process.env.HOST_ON_NETWORK === 'true') {
+  allowedOrigins = '*';
+}
 
 app.use(cors({
   origin: allowedOrigins,

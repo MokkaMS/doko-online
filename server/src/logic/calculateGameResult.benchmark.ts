@@ -34,7 +34,7 @@ const state: GameState = {
     specialPoints: { re: [], kontra: [] },
     notifications: [],
     currentTrickNotifications: [],
-    phase: 'Finished',
+    phase: 'Scoring',
 };
 
 const ITERATIONS = 1_000_000;

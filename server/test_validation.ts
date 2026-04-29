@@ -30,7 +30,7 @@ console.log('Validation logic tests passed!\n');
 const originTests = [
   { name: 'Valid localhost', input: 'http://localhost:5173', expected: true },
   { name: 'Valid domain', input: 'https://example.com', expected: true },
-  { name: 'Wildcard', input: '*', expected: false },
+  { name: 'Wildcard', input: '*', expected: true },
   { name: 'No protocol', input: 'example.com', expected: false },
   { name: 'Invalid protocol', input: 'ftp://example.com', expected: false },
   { name: 'Malformed', input: 'not-a-url', expected: false },

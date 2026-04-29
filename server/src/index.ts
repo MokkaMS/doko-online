@@ -7,7 +7,7 @@ import crypto from 'crypto';
 import { GameEngine } from './logic/GameEngine';
 import { GameState, Card, GameSettings, GameType, Suit, CardValue } from './logic/types';
 import { Bot } from './logic/Bot';
-import { validatePlayerName, validateRoomId, validatePlayerId, isValidOrigin } from './utils/validation';
+import { validatePlayerName, validateRoomId, validatePlayerId, isValidOrigin, validateBid } from './utils/validation';
 import {
   MAX_ROOMS,
   CREATE_ROOM_RATE_LIMIT,
@@ -897,6 +897,12 @@ io.on('connection', (socket: Socket) => {
     const roomIdError = validateRoomId(roomId);
     if (roomIdError) {
       socket.emit('error', roomIdError);
+      return;
+    }
+
+    const bidError = validateBid(bid);
+    if (bidError) {
+      socket.emit('error', bidError);
       return;
     }
 

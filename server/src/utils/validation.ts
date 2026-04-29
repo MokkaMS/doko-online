@@ -1,3 +1,5 @@
+import { Suit } from '../logic/types';
+
 export const MIN_PLAYER_NAME_LENGTH = 1;
 export const MAX_PLAYER_NAME_LENGTH = 20;
 
@@ -24,6 +26,21 @@ export const validatePlayerId = (playerId: string): string | null => {
   if (playerId.length > 36) return 'Player ID is too long';
   if (!/^[a-zA-Z0-9-]+$/.test(playerId)) return 'Player ID contains invalid characters';
   return null;
+};
+
+export const validateBid = (bid: string): string | null => {
+  if (!bid || typeof bid !== 'string') return 'Bid is required';
+
+  const validBids = ['Gesund', 'Hochzeit', 'DamenSolo', 'BubenSolo', 'DamenBubensolo', 'Fleischlos'];
+  if (validBids.includes(bid)) return null;
+
+  for (const suit of Object.values(Suit)) {
+    if (bid === `FarbenSolo_${suit}`) {
+      return null;
+    }
+  }
+
+  return 'Invalid bid value';
 };
 
 /**

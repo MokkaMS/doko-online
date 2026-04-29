@@ -8,4 +8,5 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=5173
+      - HOST_ON_NETWORK=${HOST_ON_NETWORK:-false}
     restart: unless-stopped

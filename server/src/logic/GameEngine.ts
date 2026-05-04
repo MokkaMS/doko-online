@@ -270,7 +270,8 @@ export class GameEngine {
 
     // 2. Fuchs gefangen
     if (settings.fuchsGefangen) {
-        trick.forEach((card, i) => {
+        for (let i = 0; i < trick.length; i++) {
+            const card = trick[i];
             if (card.suit === Suit.Karo && card.value === CardValue.Ass) {
                 const playerIdx = (starterIndex + i) % 4;
                 const player = players[playerIdx];
@@ -287,12 +288,13 @@ export class GameEngine {
                     }
                 }
             }
-        });
+        }
     }
 
     // 3. Karlchen and Karlchen gefangen
     if (isLastTrick) {
-        trick.forEach((card, i) => {
+        for (let i = 0; i < trick.length; i++) {
+            const card = trick[i];
             if (card.suit === Suit.Kreuz && card.value === CardValue.Bube) {
                 const playerIdx = (starterIndex + i) % 4;
                 const player = players[playerIdx];
@@ -316,7 +318,7 @@ export class GameEngine {
                     }
                 }
             }
-        });
+        }
     }
 
     return { re: rePoints, kontra: kontraPoints, notifications };

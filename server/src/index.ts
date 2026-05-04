@@ -318,11 +318,7 @@ const executePlayCard = (roomId: string, playerId: string, card: Card) => {
 };
 
 io.on('connection', (socket: Socket) => {
-  console.log('User connected');
-
   socket.on('create_room', ({ playerName, playerId }: { playerName: string, playerId: string }) => {
-    console.log(`[create_room] Request from ${playerName}`);
-
     const nameError = validatePlayerName(playerName);
     if (nameError) {
       socket.emit('error', nameError);
@@ -383,7 +379,6 @@ io.on('connection', (socket: Socket) => {
       isPublic: rooms[roomId].isPublic
     });
     io.emit('public_rooms_update', getPublicRooms());
-    console.log(`[create_room] Room ${roomId} created by ${playerName}`);
   });
 
   socket.on('leave_room', ({ roomId }: { roomId: string }) => {
@@ -435,8 +430,6 @@ io.on('connection', (socket: Socket) => {
   });
 
   socket.on('join_room', ({ roomId, playerName, playerId }: { roomId: string, playerName: string, playerId: string }) => {
-    console.log(`[join_room] Request from ${playerName} to join ${roomId}`);
-
     const nameError = validatePlayerName(playerName);
     if (nameError) {
       socket.emit('error', nameError);
@@ -526,7 +519,6 @@ io.on('connection', (socket: Socket) => {
         });
         addPlayerToMap(socket.id, roomId, playerId);
         socket.join(roomId);
-        console.log(`[join_room] ${playerName} joined ${roomId}. Players: ${room.players.map(p => p.name).join(', ')}`);
 
         io.to(roomId).emit('player_joined', room.players);
 
@@ -539,7 +531,6 @@ io.on('connection', (socket: Socket) => {
         });
       }
     } else {
-      console.log(`[join_room] Room ${roomId} not found for ${playerName}`);
       socket.emit('error', 'Room not found');
     }
   });
@@ -715,14 +706,9 @@ io.on('connection', (socket: Socket) => {
       const player = room.players.find(p => p.socketId === socket.id);
       if (player && room.hostId === player.id) {
         room.isPublic = !room.isPublic;
-        console.log(`[toggle_public] Room ${roomId} is now ${room.isPublic ? 'Public' : 'Private'}`);
         io.to(roomId).emit('room_update', { hostId: room.hostId, isPublic: room.isPublic });
         io.emit('public_rooms_update', getPublicRooms());
-      } else {
-        console.log(`[toggle_public] Failed: User is not host or not in room.`);
       }
-    } else {
-      console.log(`[toggle_public] Room ${roomId} not found`);
     }
   });
 
@@ -963,7 +949,6 @@ io.on('connection', (socket: Socket) => {
   });
 
   socket.on('disconnect', () => {
-    console.log('User disconnected');
     lastRoomCreation.delete(socket.id);
 
     // Remove player from room? 

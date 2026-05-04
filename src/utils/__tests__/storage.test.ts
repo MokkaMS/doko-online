@@ -103,7 +103,7 @@ describe('storage utils', () => {
       });
     });
 
-    it('should generate and store a fallback ID if crypto is not available at all', () => {
+    it('should throw an error if crypto is not available at all', () => {
        // Mock crypto to be undefined
        const originalCrypto = globalThis.crypto;
        Object.defineProperty(globalThis, 'crypto', {
@@ -111,12 +111,7 @@ describe('storage utils', () => {
         configurable: true
        });
 
-       const result = getStoredPlayerId();
-
-       expect(result).toBeDefined();
-       expect(typeof result).toBe('string');
-       expect(result.length).toBeGreaterThan(10);
-       expect(localStorage.getItem(STORAGE_KEY)).toBe(result);
+       expect(() => getStoredPlayerId()).toThrow('Secure Crypto API not available for player ID generation');
 
        // Restore
        Object.defineProperty(globalThis, 'crypto', {

@@ -12,7 +12,7 @@ export const getStoredPlayerId = (): string => {
         .map((b) => b.toString(16).padStart(2, '0'))
         .join('');
     } else {
-      storedId = Date.now().toString() + Math.random().toString();
+      throw new Error('Secure Crypto API not available for player ID generation');
     }
     localStorage.setItem(STORAGE_KEY, storedId);
   }

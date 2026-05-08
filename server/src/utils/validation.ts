@@ -49,7 +49,6 @@ export const validateBid = (bid: string): string | null => {
  */
 export const isValidOrigin = (origin: string): boolean => {
   if (!origin || typeof origin !== 'string') return false;
-  if (origin === '*') return true;
 
   try {
     const url = new URL(origin);

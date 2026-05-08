@@ -15,16 +15,16 @@ const PLAYER_NAME_KEY = 'doppelkopf_player_name';
 const localStorageMock = (() => {
   let store: Record<string, string> = {};
   return {
-    getItem: (key: string) => store[key] || null,
-    setItem: (key: string, value: string) => {
+    getItem: vi.fn((key: string) => store[key] || null),
+    setItem: vi.fn((key: string, value: string) => {
       store[key] = value.toString();
-    },
-    removeItem: (key: string) => {
+    }),
+    removeItem: vi.fn((key: string) => {
       delete store[key];
-    },
-    clear: () => {
+    }),
+    clear: vi.fn(() => {
       store = {};
-    },
+    }),
   };
 })();
 
@@ -124,12 +124,14 @@ describe('storage utils', () => {
   describe('getStoredRoomId and setStoredRoomId', () => {
     it('should return null if no room ID is stored', () => {
       expect(getStoredRoomId()).toBeNull();
+      expect(localStorage.getItem).toHaveBeenCalledWith(ROOM_ID_KEY);
     });
 
     it('should store and retrieve a room ID', () => {
       const roomId = 'room-abc';
       setStoredRoomId(roomId);
       expect(getStoredRoomId()).toBe(roomId);
+      expect(localStorage.setItem).toHaveBeenCalledWith(ROOM_ID_KEY, roomId);
       expect(localStorage.getItem(ROOM_ID_KEY)).toBe(roomId);
     });
 
@@ -137,6 +139,16 @@ describe('storage utils', () => {
       localStorage.setItem(ROOM_ID_KEY, 'some-room');
       setStoredRoomId(null);
       expect(getStoredRoomId()).toBeNull();
+      expect(localStorage.removeItem).toHaveBeenCalledWith(ROOM_ID_KEY);
+      expect(localStorage.getItem(ROOM_ID_KEY)).toBeNull();
+    });
+
+    it('should remove the room ID when setting to an empty string', () => {
+      localStorage.setItem(ROOM_ID_KEY, 'some-room');
+      // @ts-ignore - testing with empty string which should trigger removal
+      setStoredRoomId('');
+      expect(getStoredRoomId()).toBeNull();
+      expect(localStorage.removeItem).toHaveBeenCalledWith(ROOM_ID_KEY);
       expect(localStorage.getItem(ROOM_ID_KEY)).toBeNull();
     });
   });

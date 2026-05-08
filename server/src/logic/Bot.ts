@@ -10,24 +10,36 @@ export class Bot {
   static evaluateHandForBid(player: Player, settings: GameSettings): Bid {
     const hand = player.hand;
 
+    let kreuzDamenCount = 0;
+    let damenCount = 0;
+    let bubenCount = 0;
+
+    for (let i = 0; i < hand.length; i++) {
+      const c = hand[i];
+      if (c.value === CardValue.Dame) {
+        damenCount++;
+        if (c.suit === Suit.Kreuz) {
+          kreuzDamenCount++;
+        }
+      } else if (c.value === CardValue.Bube) {
+        bubenCount++;
+      }
+    }
+
     // Check for Hochzeit (Two Kreuz Damen)
-    const kreuzDamenCount = hand.filter(c => c.suit === Suit.Kreuz && c.value === CardValue.Dame).length;
     if (kreuzDamenCount === 2) {
       return 'Hochzeit';
     }
 
-    const damenCount = hand.filter(c => c.value === CardValue.Dame).length;
     if (damenCount >= 6) {
       return 'DamenSolo';
     }
 
-    const bubenCount = hand.filter(c => c.value === CardValue.Bube).length;
     if (bubenCount >= 6) {
       return 'BubenSolo';
     }
 
-    const damenBubenCount = damenCount + bubenCount;
-    if (damenBubenCount >= 10 && damenCount >= 4) {
+    if (damenCount + bubenCount >= 10 && damenCount >= 4) {
       return 'DamenBubensolo';
     }
 
@@ -45,28 +57,40 @@ export class Bot {
     if (state.reKontraAnnouncements[player.id]) return null;
 
     // We can only announce in the first few tricks (usually before playing our 2nd card)
-    if (player.hand.length < 9) return null;
+    const hand = player.hand;
+    if (hand.length < 9) return null;
 
-    const trumps = player.hand.filter(c => isTrump(c, state.gameType, state.trumpSuit, settings));
+    let trumpCount = 0;
+    let highTrumpCount = 0;
+    let kreuzDamenCount = 0;
 
-    const highTrumps = trumps.filter(c => {
-      if (c.value === CardValue.Zehn && c.suit === Suit.Herz && settings.dullenAlsHoechste) return true;
-      if (c.value === CardValue.Dame && (c.suit === Suit.Kreuz || c.suit === Suit.Pik || c.suit === Suit.Herz)) return true;
-      return false;
-    });
+    for (let i = 0; i < hand.length; i++) {
+      const c = hand[i];
+      const isCardTrump = isTrump(c, state.gameType, state.trumpSuit, settings);
+      if (isCardTrump) {
+        trumpCount++;
+        if (c.value === CardValue.Zehn && c.suit === Suit.Herz && settings.dullenAlsHoechste) {
+          highTrumpCount++;
+        } else if (c.value === CardValue.Dame && (c.suit === Suit.Kreuz || c.suit === Suit.Pik || c.suit === Suit.Herz)) {
+          highTrumpCount++;
+        }
+      }
+      if (c.suit === Suit.Kreuz && c.value === CardValue.Dame) {
+        kreuzDamenCount++;
+      }
+    }
 
     const isRe = state.rePlayerIds.includes(player.id);
     const isKontra = state.kontraPlayerIds.includes(player.id);
 
     // Heuristic: 6+ trumps including 3+ high trumps is very strong
-    if (trumps.length >= 6 && highTrumps.length >= 3) {
+    if (trumpCount >= 6 && highTrumpCount >= 3) {
       if (isRe) return 'Re';
       if (isKontra) return 'Kontra';
     }
 
     // Holding both Kreuz Damen (Hochzeit player)
-    const kreuzDamenCount = player.hand.filter(c => c.suit === Suit.Kreuz && c.value === CardValue.Dame).length;
-    if (kreuzDamenCount === 2 && trumps.length >= 5) {
+    if (kreuzDamenCount === 2 && trumpCount >= 5) {
       return 'Re'; // They are "Re" by definition in normal/hochzeit games if they have the queens.
     }
 
